@@ -4812,15 +4812,15 @@ begin
     case AutoScale of
       START:     begin
                    Auto1.Checked:=true;
-//                   if Time=0 then begin
+                   if Time=0 then begin
                      AutoWarn.Top:=Auto1.Top+2; {Show Auto-scale warning indicator}
                      AutoWarn.Visible:=true;    {next to the relevant button.}
                      AutoWarnTimer.Enabled:=true;
-//                   end
-//                   else begin
-//                     AutoWarn.Visible:=false;
-//                     AutoWarnTimer.Enabled:=false;
-//                   end;
+                   end
+                   else begin
+                     AutoWarn.Visible:=false;
+                     AutoWarnTimer.Enabled:=false;
+                   end;
                  end;
       CONTINUAL: begin
                    Auto2.Checked:=true;

@@ -4803,38 +4803,28 @@ begin
       New_DisplayLevel:=Display_Level;{was turned off.}
     end;
     AutoScale:=New_AutoScale;         {Adopt the new control state.}
-
-    Auto1.Checked:=false;
-    Auto2.Checked:=false;
-    Auto3.Checked:=false;
-    Auto4.Checked:=false;
-
     case AutoScale of
       START:     begin
-                   Auto1.Checked:=true;
-//                   if Time=0 then begin
+                   if Time=0 then begin
                      AutoWarn.Top:=Auto1.Top+2; {Show Auto-scale warning indicator}
                      AutoWarn.Visible:=true;    {next to the relevant button.}
                      AutoWarnTimer.Enabled:=true;
-//                   end
-//                   else begin
-//                     AutoWarn.Visible:=false;
-//                     AutoWarnTimer.Enabled:=false;
-//                   end;
+                   end
+                   else begin
+                     AutoWarn.Visible:=false;
+                     AutoWarnTimer.Enabled:=false;
+                   end;
                  end;
       CONTINUAL: begin
-                   Auto2.Checked:=true;
                    AutoWarn.Top:=Auto2.Top+2; {Show Auto-scale warning indicator}
                    AutoWarn.Visible:=true;    {next to the relevant button.}
                    AutoWarnTimer.Enabled:=true;
                  end;
       NEVER:     begin
-                   Auto3.Checked:=true;
                    AutoWarn.Visible:=false;
                    AutoWarnTimer.Enabled:=false;
                  end;
       AVERAGE: begin
-                   Auto4.Checked:=true;
                    AutoWarn.Top:=Auto4.Top+2; {Show Auto-scale warning indicator}
                    AutoWarn.Visible:=true;    {next to the relevant button.}
                    AutoWarnTimer.Enabled:=true;

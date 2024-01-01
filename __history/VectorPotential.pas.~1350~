@@ -1618,8 +1618,6 @@ begin
       Restart:=true;
     end
     else if photon then begin
-      New_AutoScale:=START;
-      DoUpdate:=true;
       RateOfTime.Position:=10000;
       New_RateOfTime := RateOfTime.Position;
       ArrowScaleScroll.Position:= 200;
@@ -4803,38 +4801,28 @@ begin
       New_DisplayLevel:=Display_Level;{was turned off.}
     end;
     AutoScale:=New_AutoScale;         {Adopt the new control state.}
-
-    Auto1.Checked:=false;
-    Auto2.Checked:=false;
-    Auto3.Checked:=false;
-    Auto4.Checked:=false;
-
     case AutoScale of
       START:     begin
-                   Auto1.Checked:=true;
-//                   if Time=0 then begin
+                   if Time=0 then begin
                      AutoWarn.Top:=Auto1.Top+2; {Show Auto-scale warning indicator}
                      AutoWarn.Visible:=true;    {next to the relevant button.}
                      AutoWarnTimer.Enabled:=true;
-//                   end
-//                   else begin
-//                     AutoWarn.Visible:=false;
-//                     AutoWarnTimer.Enabled:=false;
-//                   end;
+                   end
+                   else begin
+                     AutoWarn.Visible:=false;
+                     AutoWarnTimer.Enabled:=false;
+                   end;
                  end;
       CONTINUAL: begin
-                   Auto2.Checked:=true;
                    AutoWarn.Top:=Auto2.Top+2; {Show Auto-scale warning indicator}
                    AutoWarn.Visible:=true;    {next to the relevant button.}
                    AutoWarnTimer.Enabled:=true;
                  end;
       NEVER:     begin
-                   Auto3.Checked:=true;
                    AutoWarn.Visible:=false;
                    AutoWarnTimer.Enabled:=false;
                  end;
       AVERAGE: begin
-                   Auto4.Checked:=true;
                    AutoWarn.Top:=Auto4.Top+2; {Show Auto-scale warning indicator}
                    AutoWarn.Visible:=true;    {next to the relevant button.}
                    AutoWarnTimer.Enabled:=true;
@@ -4843,10 +4831,10 @@ begin
   end;
 
   {Turn off Auto Scale indicator after time started if req'd}
-//  if (Time<>0) and (AutoScale=START) then begin
-//    AutoWarn.Visible:=false;
-//    AutoWarnTimer.Enabled:=false;
-//  end;
+  if (Time<>0) and (AutoScale=START) then begin
+    AutoWarn.Visible:=false;
+    AutoWarnTimer.Enabled:=false;
+  end;
 
   {Update the display mode Colour/GreyScale}
   if New_ShowColour<>ShowColour then begin
