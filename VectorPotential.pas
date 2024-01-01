@@ -1620,6 +1620,7 @@ begin
     else if photon then begin
       New_AutoScale:=START;
       DoUpdate:=true;
+      New_DisplayLevel:=1998;
       RateOfTime.Position:=10000;
       New_RateOfTime := RateOfTime.Position;
       ArrowScaleScroll.Position:= 200;
@@ -2287,8 +2288,9 @@ begin
                end;
 
                30: begin  // if a Photon being modeled
+                   New_ReScale := 1.5E9;
                    wavelength_x := Trunc(GridWidth*ElectronComptonWavelength/ActualWidth);
-                   wave_x := Trunc(GridWidth - SpeedOfLight*Time/dx);
+                   wave_x := Trunc(2*GridWidth - SpeedOfLight*Time/dx);
                    wave_num := Trunc((xpos + SpeedOfLight*Time/dx)/(wavelength_x/2));
                    wave_r:=sqrt( sqr((xpos - (wave_num + 0.5)*(wavelength_x/2))*dx + SpeedOfLight*Time) + sqr(y*dy) + sqr(z*dz) );
                    if ( wave_r < r_lower_limit ) then wave_r:=r_lower_limit;   // prevent divide by zero errors
@@ -5266,31 +5268,28 @@ procedure TForm1.Auto_Scale(scr: smallint);  {Calculate scaling factor for data 
 const
   PixMax=$FF;
 begin
-  if AutoScale <> NEVER then begin     {only autoscale if option selected}
-    if (AutoScale=CONTINUAL) or (AutoScale=AVERAGE) or ((AutoScale=START) and (Time=0)) then begin
-
-      if (AutoScale=AVERAGE) or (AutoScale=START) then
-      begin
-        FindAverageVal(scr,DisplayField);  {Find the Average value of the field concerned}
-      end
-      else begin
-        FindMaxVal(scr,DisplayField);  {Find the Maximum value of the field concerned}
-      end;
-
-      if MaxVal<>0 then begin
-        if not IsVectorField(DisplayField) then begin
-          New_ReScale:=(PixMax/MaxVal)/3;
-        end
-        else begin
-          New_ReScale:=PixMax/MaxVal;
-        end;
-      end
-      else begin
-        New_ReScale:=0;           {if all screen points have zero value,}
-      end;                        {reset default scaling control positions}
-
-      DoUpdate:=true;
+  if (AutoScale=CONTINUAL) or (AutoScale=AVERAGE) or ((AutoScale=START) and (Time=0)) then begin
+    if (AutoScale=AVERAGE) or (AutoScale=START)then
+    begin
+      FindAverageVal(scr,DisplayField);  {Find the Average value of the field concerned}
+    end
+    else begin
+      FindMaxVal(scr,DisplayField);  {Find the Maximum value of the field concerned}
     end;
+
+    if MaxVal<>0 then begin
+      if not IsVectorField(DisplayField) then begin
+        New_ReScale:=(PixMax/MaxVal)/3;
+      end
+      else begin
+        New_ReScale:=PixMax/MaxVal;
+      end;
+    end
+    else begin
+      New_ReScale:=0;           {if all screen points have zero value,}
+    end;                        {reset default scaling control positions}
+
+    DoUpdate:=true;
   end;
 end;
 
