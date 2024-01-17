@@ -19,14 +19,10 @@ uses
   ExtCtrls, StdCtrls, Spin, ComCtrls, Math, Grids, Jpeg;
 
 const
-  // These compile-time switches can be used to re-configure the software model
-  // for different modeling requirements - mainly to do with allowing larger modeled
-  // space (i.e. more data points) by reducing the amount of data stored for each point.
-  // If these options are changed, the software must be recompiled for it to take effect.
   STANDING_WAVE_ANALYSIS=false;
   TWO_PARTICLE_COULOMB_FORCE=false;
-  TWO_PARTICLE_REFLECTION_FIELDS=true;
-  TWO_PROTON_MODEL=true;
+  TWO_PARTICLE_REFLECTION_FIELDS=false;
+  TWO_PROTON_MODEL=false;
 
   // Number of points to divide by in vector functions across point groups
   nP=3;
@@ -1271,7 +1267,7 @@ var
   c1,c2,c3,A,DistFromCenter,ExpectedAccel,E_Energy_Sum,B_Energy_Sum, M, MeC_Hhat: Extended;
   sine_wave_sum, neutrino_quarklets, field_stats: boolean;
   progress, progress_inc, r_contracted, x_contracted, x_velocity, gamma, r_gamma : single;
-  expr1, expr2 : Extended;
+  expr1, expr2, expr3, expr4, expr5, expr6, expr7, expr8, expr9, expr10, expr11 : Extended;
   Qsin1, Qcos1, Qsin2, Qcos2, c, E0, Q: extended;
   charge_sign, charge_factor: single;
 
@@ -2716,16 +2712,20 @@ begin
                actual_y:=y*dy;
                actual_z:=z*dz;
 
-               // Part 1:
-               // Flip the Maple calculations orientation to match the model,
-               // such that the vector arrows of the E field are the same when switching between useFormula true/false.
-               actual_x:=-actual_x;
-               actual_y:=-actual_y;
-
                with points[NewScreen]^[xpos,ypos,zpos].Electric do begin
                  // Get the Psi (Y) vector
                  vect := points[NewScreen]^[xpos,ypos,zpos].PsiVect;
                  MeC_Hhat := (M*SpeedOfLight/Hhat);
+
+                 expr3 := (3*vect.x*r/Power(sqr(r),5/2));
+                 expr4 := (3*vect.y*r/Power(sqr(r),5/2));
+                 expr5 := MeC_Hhat*(3*vect.y*r/Power(sqr(r),2));
+                 expr6 := sqr(MeC_Hhat)*(vect.x*r/Power(sqr(r),3/2));
+                 expr7 := (3*vect.x*r/Power(sqr(r),2));
+                 expr8 := (vect.y*r/Power(sqr(r),3/2));
+                 expr9 := (3*vect.z*r/Power(sqr(r),5/2));
+                 expr10 := MeC_Hhat*(3*vect.z*r/Power(sqr(r),2));
+                 expr11 := (vect.z*r/Power(sqr(r),3/2));
 
                  charge_sign:=1;
                  charge_factor:=1;
@@ -2733,38 +2733,20 @@ begin
                  // From Maple calculations:
                  //
                  with points[NewScreen]^[xpos,ypos,zpos].Electric do begin
-                     x:=3*(vect.x/Power(r,4))*sqr(actual_x) -
-					              3*(M*c/Hhat)*(vect.y/Power(r,3))*sqr(actual_x) -
-					              vect.x/Power(r,2) -
-						            sqr(M*c/Hhat)*(vect.x/Power(r,2))*sqr(actual_x) +
-                        (M*c/Hhat)*(vect.y/r) +
-						            3*(vect.y/Power(r,4))*actual_x*actual_y +
-                        3*(M*c/Hhat)*(vect.x/Power(r,3))*actual_x*actual_y -
-                        sqr(M*c/Hhat)*(vect.y/Power(r,2))*actual_x*actual_y -
-						            sqr((M*c/Hhat))*vect.x;
+                     x:=(expr3*sqr(actual_x) - expr5*sqr(actual_x) -
+                        vect.x*r/Power(sqr(r),3/2) - expr6*sqr(actual_x) +
+                        MeC_Hhat*(vect.y*r/sqr(r)) - expr4*actual_x*actual_y -
+                        MeC_Hhat*expr7*actual_x*actual_y +
+                        sqr(MeC_Hhat)*expr8*actual_x*actual_y - sqr(MeC_Hhat)*vect.x);
 
-                     y:=-3*(vect.x/Power(r,4))*actual_x*actual_y +
-					              3*(M*c/Hhat)*(vect.y/Power(r,3))*actual_x*actual_y +
-                        sqr((M*c/Hhat))*(vect.x/Power(r,2))*actual_x*actual_y +
-						            3*(vect.y/Power(r,4))*sqr(actual_y) +
-                        3*(M*c/Hhat)*(vect.x/Power(r,3))*sqr(actual_y) -
-						            (vect.y/Power(r,2)) -
-                        sqr(M*c/Hhat)*(vect.y/Power(r,2))*sqr(actual_y) -
-						            (M*c/Hhat)*(vect.x/r) -
-                        sqr((M*c/Hhat))*vect.y;
+                     y:=(expr3*actual_x*actual_y - expr5*actual_x*actual_y -
+                        expr6*actual_x*actual_y - expr4*sqr(actual_y) -
+                        MeC_Hhat*expr7*sqr(actual_y) + expr8 +
+                        sqr(MeC_Hhat)*expr8*sqr(actual_y) + MeC_Hhat*(vect.x*r/sqr(r)) + sqr(MeC_Hhat)*vect.y);
 
-                     z:=3*(vect.x/Power(r,4))*actual_x*actual_z +
-					              3*(M*c/Hhat)*(vect.y/Power(r,3))*actual_x*actual_z -
-                        sqr(M*c/Hhat)*(vect.x/Power(r,2))*actual_x*actual_z +
-						            3*(vect.y/Power(r,4))*actual_y*actual_z -
-                        3*(M*c/Hhat)*(vect.x/Power(r,3))*actual_y*actual_z -
-						            sqr(M*c/Hhat)*(vect.y/Power(r,2))*actual_y*actual_z;
-
-                     // Part 2:
-                     // Flip the Maple calculations orientation to match the model,
-                     // such that the vector arrows of the E field are the same when switching between useFormula true/false.
-                     x:=-x;
-                     y:=-y;
+                     z:=(expr3*actual_x*actual_z - expr5*actual_x*actual_z -
+                        expr6*actual_x*actual_z - expr4*actual_y*actual_z -
+                        MeC_Hhat*expr7*actual_y*actual_z + sqr(MeC_Hhat)*expr8*actual_y*actual_z);
                  end;
                end;
              end;
@@ -2840,28 +2822,16 @@ begin
                    expr1 := (M/(Hhat*sqr(r)));
                    expr2 := (sqr(M)*SpeedOfLight/(r*sqr(Hhat)));
 
-                   // Part 1:
-                   // Flip the Maple calculations orientation to match the model,
-                   // such that the vector arrows of the B field are the same when switching between useFormula true/false.
-                   actual_y:=-actual_y;
-                   actual_x:=-actual_x;
-
                    // From Maple calculations:
                    //
                    // B = Curl(A)
                    // B = [(m/(Hhat*r^2))*Y_x*z + (m^2c/(r*Hhat^2))*Y_y*z,
                    //      (m/(Hhat*r^2))*Y_y*z - (m^2c/(r*Hhat^2)*Y_x*z,
                    //      -(m/(Hhat*r^2))*Y_x*x - (m^2c/(r*Hhat^2))*Y_y*x - (m/(Hhat*r^2))*Y_y*y + (m^2c/(r*Hhat^2)*Y_x*y]
-                   x:=(expr1*vect.x*actual_z + expr2*vect.y*actual_z);
-                   y:=(expr1*vect.y*actual_z - expr2*vect.x*actual_z);
-                   z:=(-expr1*vect.x*actual_x - expr2*vect.y*actual_x -
+                   x:=(expr1*vect.x*actual_z - expr2*vect.y*actual_z);
+                   y:=(-expr1*vect.y*actual_z - expr2*vect.x*actual_z);
+                   z:=(-expr1*vect.x*actual_x + expr2*vect.y*actual_x +
                         expr1*vect.y*actual_y + expr2*vect.x*actual_y);
-
-                   // Part 2:
-                   // Flip the Maple calculations orientation to match the model,
-                   // such that the vector arrows of the E field are the same when switching between useFormula true/false.
-                   x:=-x;
-                   y:=-y;
                  end;
 
                  // if the second particle is a positron or proton, we must reverse the direction of the magnetic field vector, as

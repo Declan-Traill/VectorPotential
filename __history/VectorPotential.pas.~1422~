@@ -19,14 +19,10 @@ uses
   ExtCtrls, StdCtrls, Spin, ComCtrls, Math, Grids, Jpeg;
 
 const
-  // These compile-time switches can be used to re-configure the software model
-  // for different modeling requirements - mainly to do with allowing larger modeled
-  // space (i.e. more data points) by reducing the amount of data stored for each point.
-  // If these options are changed, the software must be recompiled for it to take effect.
   STANDING_WAVE_ANALYSIS=false;
   TWO_PARTICLE_COULOMB_FORCE=false;
-  TWO_PARTICLE_REFLECTION_FIELDS=true;
-  TWO_PROTON_MODEL=true;
+  TWO_PARTICLE_REFLECTION_FIELDS=false;
+  TWO_PROTON_MODEL=false;
 
   // Number of points to divide by in vector functions across point groups
   nP=3;

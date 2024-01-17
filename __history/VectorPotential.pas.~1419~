@@ -19,14 +19,10 @@ uses
   ExtCtrls, StdCtrls, Spin, ComCtrls, Math, Grids, Jpeg;
 
 const
-  // These compile-time switches can be used to re-configure the software model
-  // for different modeling requirements - mainly to do with allowing larger modeled
-  // space (i.e. more data points) by reducing the amount of data stored for each point.
-  // If these options are changed, the software must be recompiled for it to take effect.
   STANDING_WAVE_ANALYSIS=false;
   TWO_PARTICLE_COULOMB_FORCE=false;
-  TWO_PARTICLE_REFLECTION_FIELDS=true;
-  TWO_PROTON_MODEL=true;
+  TWO_PARTICLE_REFLECTION_FIELDS=false;
+  TWO_PROTON_MODEL=false;
 
   // Number of points to divide by in vector functions across point groups
   nP=3;
@@ -1271,7 +1267,7 @@ var
   c1,c2,c3,A,DistFromCenter,ExpectedAccel,E_Energy_Sum,B_Energy_Sum, M, MeC_Hhat: Extended;
   sine_wave_sum, neutrino_quarklets, field_stats: boolean;
   progress, progress_inc, r_contracted, x_contracted, x_velocity, gamma, r_gamma : single;
-  expr1, expr2 : Extended;
+  expr1, expr2, expr3, expr4, expr5, expr6, expr7, expr8, expr9, expr10, expr11 : Extended;
   Qsin1, Qcos1, Qsin2, Qcos2, c, E0, Q: extended;
   charge_sign, charge_factor: single;
 
@@ -2727,16 +2723,26 @@ begin
                  vect := points[NewScreen]^[xpos,ypos,zpos].PsiVect;
                  MeC_Hhat := (M*SpeedOfLight/Hhat);
 
+                 //expr3 := (3*vect.x*r/Power(sqr(r),5/2));
+                 //expr4 := (3*vect.y*r/Power(sqr(r),5/2));
+                 //expr5 := MeC_Hhat*(3*vect.y*r/Power(sqr(r),2));
+                 //expr6 := sqr(MeC_Hhat)*(vect.x*r/Power(sqr(r),3/2));
+                 //expr7 := (3*vect.x*r/Power(sqr(r),2));
+                 //expr8 := (vect.y*r/Power(sqr(r),3/2));
+                 //expr9 := (3*vect.z*r/Power(sqr(r),5/2));
+                 //expr10 := MeC_Hhat*(3*vect.z*r/Power(sqr(r),2));
+                 //expr11 := (vect.z*r/Power(sqr(r),3/2));
+
                  charge_sign:=1;
                  charge_factor:=1;
 
                  // From Maple calculations:
                  //
                  with points[NewScreen]^[xpos,ypos,zpos].Electric do begin
-                     x:=3*(vect.x/Power(r,4))*sqr(actual_x) -
-					              3*(M*c/Hhat)*(vect.y/Power(r,3))*sqr(actual_x) -
+                     x:=3*(vect.x/Power(r,4))*sqr(actual_y) -
+					              3*(M*c/Hhat)*(vect.y/Power(r,3))*sqr(actual_y) -
 					              vect.x/Power(r,2) -
-						            sqr(M*c/Hhat)*(vect.x/Power(r,2))*sqr(actual_x) +
+						            sqr(M*c/Hhat)*(vect.x/Power(r,2))*sqr(actual_y) +
                         (M*c/Hhat)*(vect.y/r) +
 						            3*(vect.y/Power(r,4))*actual_x*actual_y +
                         3*(M*c/Hhat)*(vect.x/Power(r,3))*actual_x*actual_y -
