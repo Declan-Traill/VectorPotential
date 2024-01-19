@@ -24,9 +24,9 @@ const
   // space (i.e. more data points) by reducing the amount of data stored for each point.
   // If these options are changed, the software must be recompiled for it to take effect.
   STANDING_WAVE_ANALYSIS=false;
-  TWO_PARTICLE_COULOMB_FORCE=false;
-  TWO_PARTICLE_REFLECTION_FIELDS=true;
-  TWO_PROTON_MODEL=true;
+  TWO_PARTICLE_COULOMB_FORCE=true;
+  TWO_PARTICLE_REFLECTION_FIELDS=false;
+  TWO_PROTON_MODEL=false;
 
   // Number of points to divide by in vector functions across point groups
   nP=3;
@@ -3354,10 +3354,15 @@ begin
 
     // Total Pressure = The sum of both the Positive & Negative Power divided by speed of light
     Pressure:=(PowerSum_neg + PowerSum_pos)/SpeedOfLight;
+    //Pressure:=(PowerSum_neg/PowerCount_neg + PowerSum_pos/PowerCount_pos)/SpeedOfLight;
+    //Pressure:=Pressure*(PowerCount_neg + PowerCount_pos);
 
     // The actual pressure at a single, central grid point is 1/πr^2, where r is the number of grid points between the two
     // particle centers.
-    Pressure:=Pressure/(1 + Pi*sqr(GridWidth*p1_p2_diff*dx/ActualWidth));
+    Pressure:=Pressure/(Pi*sqr(GridWidth*p1_p2_diff*dx/ActualWidth));
+    //Pressure:=Pressure/(((3/(p1_p2_diff/2))*(4/3)*Pi*Power(p1_p2_diff/2, 3)));
+    //Pressure:=Pressure*(Pi*sqr(p1_p2_diff));
+    //Pressure:=Pressure/((1/6)*Pi*sqr(p1_p2_diff)*p1_p2_diff);
 
     // Total force is pressure * the area of 1 point
     Force:= Pressure*PointArea;
