@@ -1762,7 +1762,7 @@ begin
 
        if neutrino then begin
          SpinConstant:=( Hhat / ElectronNeutrinoMass ); // Metres^2/(Radians*Second)
-         delta := ( sqrt(4/5) * UnitaryCharge * Hhat ) / ( 4 * Pi * ElectronNeutrinoMass * SpeedOfLight * Permittivity );
+         delta := ( sqrt(4/5) * UnitaryCharge * Hhat ) / ( 2 * Pi * ElectronNeutrinoMass * SpeedOfLight * Permittivity );
 
          // theta_const is in Radians/Second ( i.e. the same as solving E = hf for f, where E=mc^2, and h=2*Pi*Hhat,
          // then converting f to angular frequency w, via w = 2*Pi*f )
@@ -1771,7 +1771,7 @@ begin
        end
        else if proton then begin
          SpinConstant:=( Hhat / ProtonMass ); // Metres^2/(Radians*Second)
-         delta := ( ProtonCharge * Hhat ) / ( 4 * Pi * ProtonMass * SpeedOfLight * Permittivity );
+         delta := ( ProtonCharge * Hhat ) / ( 2 * Pi * ProtonMass * SpeedOfLight * Permittivity );
 
          // theta_const is in Radians/Second ( i.e. the same as solving E = hf for f, where E=mc^2, and h=2*Pi*Hhat,
          // then converting f to angular frequency w, via w = 2*Pi*f )
@@ -1780,7 +1780,7 @@ begin
        end
        else if neutron then begin
          SpinConstant:=( Hhat / NeutronMass ); // Metres^2/(Radians*Second)
-         delta := ( sqrt(4/5) * UnitaryCharge * Hhat ) / ( 4 * Pi * NeutronMass * SpeedOfLight * Permittivity );
+         delta := ( sqrt(4/5) * UnitaryCharge * Hhat ) / ( 2 * Pi * NeutronMass * SpeedOfLight * Permittivity );
 
          // theta_const is in Radians/Second ( i.e. the same as solving E = hf for f, where E=mc^2, and h=2*Pi*Hhat,
          // then converting f to angular frequency w, via w = 2*Pi*f )
@@ -1789,7 +1789,7 @@ begin
        end
        else if quark_up then begin
          SpinConstant:=( Hhat / ProtonMass ); // Metres^2/(Radians*Second)
-         delta := ( (2/3)*ProtonCharge * Hhat ) / ( 4 * Pi * ProtonMass * SpeedOfLight * Permittivity );
+         delta := ( (2/3)*ProtonCharge * Hhat ) / ( 2 * Pi * ProtonMass * SpeedOfLight * Permittivity );
 
          // theta_const is in Radians/Second ( i.e. the same as solving E = hf for f, where E=mc^2, and h=2*Pi*Hhat,
          // then converting f to angular frequency w, via w = 2*Pi*f )
@@ -1798,7 +1798,7 @@ begin
        end
        else if quark_down then begin
          SpinConstant:=( Hhat / ProtonMass ); // Metres^2/(Radians*Second)
-         delta := ( (1/3)*ProtonCharge * Hhat ) / ( 4 * Pi * ProtonMass * SpeedOfLight * Permittivity );
+         delta := ( (1/3)*ProtonCharge * Hhat ) / ( 2 * Pi * ProtonMass * SpeedOfLight * Permittivity );
 
          // theta_const is in Radians/Second ( i.e. the same as solving E = hf for f, where E=mc^2, and h=2*Pi*Hhat,
          // then converting f to angular frequency w, via w = 2*Pi*f )
@@ -1807,7 +1807,7 @@ begin
        end
        else begin // electrons and/or positrons
          SpinConstant:=( Hhat / ElectronMass ); // Metres^2/(Radians*Second)
-         delta := ( ElectronCharge * Hhat ) / ( 4 * Pi * ElectronMass * SpeedOfLight * Permittivity );
+         delta := ( ElectronCharge * Hhat ) / ( 2 * Pi * ElectronMass * SpeedOfLight * Permittivity );
 
          // theta_const is in Radians/Second ( i.e. the same as solving E = hf for f, where E=mc^2, and h=2*Pi*Hhat,
          // then converting f to angular frequency w, via w = 2*Pi*f )
@@ -1887,11 +1887,11 @@ begin
        //
        // Thus Total Electron Wave Equation (Ye) is:
        //
-       // Ye = ((Qe*Hhat) / (4*Pi*r*i*Me*c*Eo )) * Exp( ( - i * Me * c^2 / Hhat ) * ( T – r/c ) )
+       // Ye = ((Qe*Hhat) / (2*Pi*r*i*Me*c*Eo )) * Exp( ( - i * Me * c^2 / Hhat ) * ( T – r/c ) )
        //
        // and the Electric Potential div(psi) in spherical coordinates is
        //
-       // V = (Qe / ( 4 * Pi * r * Me * c * Eo )) * (Me * c * r – i * Hhat) *  Exp( ( - i * Me * c^2 / Hhat ) * ( T – r/c ) )
+       // V = (Qe / ( 2 * Pi * r * Me * c * Eo )) * (Me * c * r – i * Hhat) *  Exp( ( - i * Me * c^2 / Hhat ) * ( T – r/c ) )
        //
        // Where:
        // Ye is Electron Wave Function (psi)
@@ -2733,7 +2733,7 @@ begin
                  // From Maple calculations:
                  //
                  with points[NewScreen]^[xpos,ypos,zpos].Electric do begin
-                     x:=0.5*(3*(vect.x/Power(r,4))*sqr(actual_x) -
+                     x:=3*(vect.x/Power(r,4))*sqr(actual_x) -
 					              3*(M*c/Hhat)*(vect.y/Power(r,3))*sqr(actual_x) -
 					              vect.x/Power(r,2) -
 						            sqr(M*c/Hhat)*(vect.x/Power(r,2))*sqr(actual_x) +
@@ -2741,9 +2741,9 @@ begin
 						            3*(vect.y/Power(r,4))*actual_x*actual_y +
                         3*(M*c/Hhat)*(vect.x/Power(r,3))*actual_x*actual_y -
                         sqr(M*c/Hhat)*(vect.y/Power(r,2))*actual_x*actual_y -
-						            sqr((M*c/Hhat))*vect.x);
+						            sqr((M*c/Hhat))*vect.x;
 
-                     y:=0.5*(-3*(vect.x/Power(r,4))*actual_x*actual_y +
+                     y:=-3*(vect.x/Power(r,4))*actual_x*actual_y +
 					              3*(M*c/Hhat)*(vect.y/Power(r,3))*actual_x*actual_y +
                         sqr((M*c/Hhat))*(vect.x/Power(r,2))*actual_x*actual_y +
 						            3*(vect.y/Power(r,4))*sqr(actual_y) +
@@ -2751,14 +2751,14 @@ begin
 						            (vect.y/Power(r,2)) -
                         sqr(M*c/Hhat)*(vect.y/Power(r,2))*sqr(actual_y) -
 						            (M*c/Hhat)*(vect.x/r) -
-                        sqr((M*c/Hhat))*vect.y);
+                        sqr((M*c/Hhat))*vect.y;
 
-                     z:=0.5*(3*(vect.x/Power(r,4))*actual_x*actual_z +
+                     z:=3*(vect.x/Power(r,4))*actual_x*actual_z +
 					              3*(M*c/Hhat)*(vect.y/Power(r,3))*actual_x*actual_z -
                         sqr(M*c/Hhat)*(vect.x/Power(r,2))*actual_x*actual_z +
 						            3*(vect.y/Power(r,4))*actual_y*actual_z -
                         3*(M*c/Hhat)*(vect.x/Power(r,3))*actual_y*actual_z -
-						            sqr(M*c/Hhat)*(vect.y/Power(r,2))*actual_y*actual_z);
+						            sqr(M*c/Hhat)*(vect.y/Power(r,2))*actual_y*actual_z;
 
                      // Part 2:
                      // Flip the Maple calculations orientation to match the model,
@@ -2852,9 +2852,9 @@ begin
                    // B = [(m/(Hhat*r^2))*Y_x*z + (m^2c/(r*Hhat^2))*Y_y*z,
                    //      (m/(Hhat*r^2))*Y_y*z - (m^2c/(r*Hhat^2)*Y_x*z,
                    //      -(m/(Hhat*r^2))*Y_x*x - (m^2c/(r*Hhat^2))*Y_y*x - (m/(Hhat*r^2))*Y_y*y + (m^2c/(r*Hhat^2)*Y_x*y]
-                   x:=0.5*(expr1*vect.x*actual_z + expr2*vect.y*actual_z);
-                   y:=0.5*(expr1*vect.y*actual_z - expr2*vect.x*actual_z);
-                   z:=0.5*(-expr1*vect.x*actual_x - expr2*vect.y*actual_x -
+                   x:=(expr1*vect.x*actual_z + expr2*vect.y*actual_z);
+                   y:=(expr1*vect.y*actual_z - expr2*vect.x*actual_z);
+                   z:=(-expr1*vect.x*actual_x - expr2*vect.y*actual_x -
                         expr1*vect.y*actual_y + expr2*vect.x*actual_y);
 
                    // Part 2:
@@ -3027,7 +3027,7 @@ begin
 {$IFEND}
 			            particle1_E[xpos,ypos,zpos]:=points[NewScreen]^[xpos,ypos,zpos].Electric;
 				        end;
-                particle1_Power[xpos, ypos, zpos]:=PowerFlow(NewGroup.P0);
+                particle1_Power[xpos, ypos, zpos]:=RMS_PowerFlow(NewGroup.P0);
 		          end
 		          else if (pass=2) then begin
                 if not EnergyCorrection then begin
@@ -3036,7 +3036,7 @@ begin
 {$IFEND}
 			            particle2_E[xpos,ypos,zpos]:=points[NewScreen]^[xpos,ypos,zpos].Electric;
 			          end;
-			          particle2_Power[xpos, ypos, zpos]:=PowerFlow(NewGroup.P0);
+			          particle2_Power[xpos, ypos, zpos]:=RMS_PowerFlow(NewGroup.P0);
 		          end;
 		        end // end if (two_particles)
             else begin
@@ -5440,14 +5440,14 @@ function TForm1.E_Energy(E_vect: Vector): extended;
   RMS in 3 cartesian coordinate dimensions (x, y, z), as the
   wave-function is sinusoidal in all three dimensions:
 
-    Ems=E/(√2)
-    ∴ue=(1/4)*ε0*E^2
+    Ems=E/(√2*√2*√2)
+    ∴ue=(1/16)*ε0*E^2
 }
 var
   amp: Extended;
 begin
   amp:= VectSize(E_vect);
-  Result:=0.5*Permittivity*sqr(amp/(sqrt(2)));
+  Result:=0.5*Permittivity*sqr(amp/(sqrt(2)*sqrt(2)*sqrt(2)));
 end;
 
 function TForm1.B_Energy(B_vect: Vector): extended;
@@ -5466,14 +5466,14 @@ function TForm1.B_Energy(B_vect: Vector): extended;
   RMS in 3 cartesian coordinate dimensions (x, y, z), as the
   wave-function is sinusoidal in all three dimensions:
 
-    Hms=H/(√2)
-  ue=(1/4)*μ0*H^2
+    Hms=H/(√2*√2*√2)
+  ue=(1/16)*μ0*H^2
 }
 var
   amp: Extended;
 begin
   amp:= VectSize(BtoH(B_vect));
-  Result:=0.5*Permeability*sqr(amp/(sqrt(2)));
+  Result:=0.5*Permeability*sqr(amp/(sqrt(2)*sqrt(2)*sqrt(2)));
 end;
 
 function TForm1.PowerFlow(Apoint: point): VectorDouble;
@@ -5494,13 +5494,12 @@ begin
   end;
 
   with vect do begin
-    x:=x/Permeability;
+    x:=x/Permeability;         {Rescale values by area of grid point}
     y:=y/Permeability;
     z:=z/Permeability;
   end;
   Result:=vect;
 end;
-
 
 function TForm1.RMS_PowerFlow(Apoint: point): VectorDouble;
 var
@@ -5513,16 +5512,16 @@ begin
   // RMS in 3 cartesian coordinate dimensions (x, y, z), as the
   // wave-function is sinusoidal in all three dimensions:
   //
-  // Ems=E/√2
-  // ∴ue=(1/4)*ε0*E^2
+  // Ems=E/(√2*√2*√2)
+  // ∴ue=(1/16)*ε0*E^2
   //
-  // Hms=H/√2
-  // ∴ue=(1/4)*μ0*H^2
+  // Hms=H/(√2*√2*√2)
+  // ∴ue=(1/16)*μ0*H^2
 
   with vect do begin
-    x:=(x/4);
-    y:=(y/4);
-    z:=(z/4);
+    x:=(x/16);
+    y:=(y/16);
+    z:=(z/16);
   end;
   Result:=vect;
 end;

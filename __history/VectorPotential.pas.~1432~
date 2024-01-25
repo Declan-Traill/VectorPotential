@@ -3027,7 +3027,7 @@ begin
 {$IFEND}
 			            particle1_E[xpos,ypos,zpos]:=points[NewScreen]^[xpos,ypos,zpos].Electric;
 				        end;
-                particle1_Power[xpos, ypos, zpos]:=PowerFlow(NewGroup.P0);
+                particle1_Power[xpos, ypos, zpos]:=RMS_PowerFlow(NewGroup.P0);
 		          end
 		          else if (pass=2) then begin
                 if not EnergyCorrection then begin
@@ -3036,7 +3036,7 @@ begin
 {$IFEND}
 			            particle2_E[xpos,ypos,zpos]:=points[NewScreen]^[xpos,ypos,zpos].Electric;
 			          end;
-			          particle2_Power[xpos, ypos, zpos]:=PowerFlow(NewGroup.P0);
+			          particle2_Power[xpos, ypos, zpos]:=RMS_PowerFlow(NewGroup.P0);
 		          end;
 		        end // end if (two_particles)
             else begin
@@ -3354,10 +3354,13 @@ begin
 
     // Total Pressure = The sum of both the Positive & Negative Power divided by speed of light
     Pressure:=(PowerSum_neg + PowerSum_pos)/SpeedOfLight;
+//    Pressure:=(PowerSum_neg/PowerCount_neg + PowerSum_pos/PowerCount_pos)/SpeedOfLight;
+//    Pressure:=(PowerSum_neg + PowerSum_pos)/((PowerCount_neg + PowerCount_pos)*SpeedOfLight);
 
     // The actual pressure at a single, central grid point is 1/πr^2, where r is the number of grid points between the two
     // particle centers.
     Pressure:=Pressure/(1 + Pi*sqr(GridWidth*p1_p2_diff*dx/ActualWidth));
+//    Pressure:=Pressure*4*Pi;
 
     // Total force is pressure * the area of 1 point
     Force:= Pressure*PointArea;
@@ -5440,14 +5443,14 @@ function TForm1.E_Energy(E_vect: Vector): extended;
   RMS in 3 cartesian coordinate dimensions (x, y, z), as the
   wave-function is sinusoidal in all three dimensions:
 
-    Ems=E/(√2)
-    ∴ue=(1/4)*ε0*E^2
+    Ems=E/(√2*√2*√2)
+    ∴ue=(1/16)*ε0*E^2
 }
 var
   amp: Extended;
 begin
   amp:= VectSize(E_vect);
-  Result:=0.5*Permittivity*sqr(amp/(sqrt(2)));
+  Result:=0.5*Permittivity*sqr(amp/(sqrt(2)*sqrt(2)*sqrt(2)));
 end;
 
 function TForm1.B_Energy(B_vect: Vector): extended;
@@ -5466,14 +5469,14 @@ function TForm1.B_Energy(B_vect: Vector): extended;
   RMS in 3 cartesian coordinate dimensions (x, y, z), as the
   wave-function is sinusoidal in all three dimensions:
 
-    Hms=H/(√2)
-  ue=(1/4)*μ0*H^2
+    Hms=H/(√2*√2*√2)
+  ue=(1/16)*μ0*H^2
 }
 var
   amp: Extended;
 begin
   amp:= VectSize(BtoH(B_vect));
-  Result:=0.5*Permeability*sqr(amp/(sqrt(2)));
+  Result:=0.5*Permeability*sqr(amp/(sqrt(2)*sqrt(2)*sqrt(2)));
 end;
 
 function TForm1.PowerFlow(Apoint: point): VectorDouble;
@@ -5501,31 +5504,60 @@ begin
   Result:=vect;
 end;
 
-
 function TForm1.RMS_PowerFlow(Apoint: point): VectorDouble;
+{Calculate the RMS Power flow vector at a point in the grid by taking }
+{the vector cross product of the RMS Electric & Magnetic fields, and  }
+{dividing the result by the Permeability of free space.}
 var
-  vect: VectorDouble;
+  vect, E, H: VectorDouble;
 begin
-  // Get instantaneous Power Flow
-  vect:=PowerFlow(Apoint);
-
-  // Calculate RMS of Power Flow (effective, actual Power Flow)
-  // RMS in 3 cartesian coordinate dimensions (x, y, z), as the
-  // wave-function is sinusoidal in all three dimensions:
-  //
   // Ems=E/√2
   // ∴ue=(1/4)*ε0*E^2
   //
   // Hms=H/√2
   // ∴ue=(1/4)*μ0*H^2
+  with Apoint do begin
+    E.x := Electric.x/sqrt(2);
+    E.y := Electric.y/sqrt(2);
+    E.z := Electric.z/sqrt(2);
+    H.x := Magnetic.x/sqrt(2);
+    H.y := Magnetic.y/sqrt(2);
+    H.z := Magnetic.z/sqrt(2);
+    vect:=VectorCross(E,H);
+  end;
 
   with vect do begin
-    x:=(x/4);
-    y:=(y/4);
-    z:=(z/4);
+    x:=x/Permeability;
+    y:=y/Permeability;
+    z:=z/Permeability;
   end;
   Result:=vect;
 end;
+
+//function TForm1.RMS_PowerFlow(Apoint: point): VectorDouble;
+//var
+//  vect: VectorDouble;
+//begin
+//  // Get instantaneous Power Flow
+//  vect:=PowerFlow(Apoint);
+//
+  // Calculate RMS of Power Flow (effective, actual Power Flow)
+  // RMS in 3 cartesian coordinate dimensions (x, y, z), as the
+  // wave-function is sinusoidal in all three dimensions:
+  //
+  // Ems=E/(√2*√2*√2)
+  // ∴ue=(1/16)*ε0*E^2
+  //
+  // Hms=H/(√2*√2*√2)
+  // ∴ue=(1/16)*μ0*H^2
+//
+//  with vect do begin
+//    x:=(x/16);
+//    y:=(y/16);
+//    z:=(z/16);
+//  end;
+//  Result:=vect;
+//end;
 
 procedure TForm1.Vect_ArrowsClick(Sender: TObject);
 {The Vector Arrows button has been changed, so either enable or disable}
