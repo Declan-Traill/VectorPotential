@@ -3025,7 +3025,7 @@ begin
 {$IFEND}
 			            particle1_E[xpos,ypos,zpos]:=points[NewScreen]^[xpos,ypos,zpos].Electric;
 				        end;
-                particle1_Power[xpos, ypos, zpos]:=RMS_PowerFlow(NewGroup.P0);
+                particle1_Power[xpos, ypos, zpos]:=PowerFlow(NewGroup.P0);
 		          end
 		          else if (pass=2) then begin
                 if not EnergyCorrection then begin
@@ -3034,7 +3034,7 @@ begin
 {$IFEND}
 			            particle2_E[xpos,ypos,zpos]:=points[NewScreen]^[xpos,ypos,zpos].Electric;
 			          end;
-			          particle2_Power[xpos, ypos, zpos]:=RMS_PowerFlow(NewGroup.P0);
+			          particle2_Power[xpos, ypos, zpos]:=PowerFlow(NewGroup.P0);
 		          end;
 		        end // end if (two_particles)
             else begin

@@ -3100,8 +3100,8 @@ begin
             particle_neg_Reflected.z := -particle_neg_Reflected.z;
           end;
  {$IFEND}
-          Power_x1:=particle1_Power[xpos, ypos, zpos].x;  //  The RMS Power flow from particle 1
-          Power_x2:=particle2_Power[xpos, ypos, zpos].x;  //  The RMS Power flow from particle 2
+          Power_x1:=particle1_Power[xpos, ypos, zpos].x;
+          Power_x2:=particle2_Power[xpos, ypos, zpos].x;
 
           vect:=particle1_E[xpos,ypos,zpos];
           vect2:=particle2_E[xpos,ypos,zpos];
@@ -3327,7 +3327,7 @@ begin
     //
     // So, when combined with the (1/2) factor seen above, the actual Electric energy density becomes:
     //
-    // ∴ ue = (1/2)*ε0*(1/√2 * ε)^2    =   (1/4)*ε0*ε^2
+    // ∴ ue = (1/2)*ε0*(1/√2 * 1/√2 * 1/√2 * ε)^2    =   (1/16)*ε0*ε^2
     //
     // The Power value obtained is then converted into a pressure by dividing by the speed of light.
     //
@@ -3341,8 +3341,11 @@ begin
     //
     // If we start from the situation where both particles are together at the same point, then there is a single grid point of
     // area interacting between them. As the particles move apart, the volume of the sphere from each particle's center to the
-    // other particle's center represents all of the contributing grid points to the total force attributed to the central point.
-    // Then inverse law applies from the particle center to the midpoint between the two particles (where they started).
+    // mid-way point between them represents all of the contributing grid points to the total force attributed to the central point.
+    // So, in order to keep the area of interaction between the particles as one grid point of area, in the calculation we must
+    // divide by the rate of increase in volume (V) of the sphere with the distance from the mid-way point (R), which is dV/dR.
+    // As the volume of a sphere is (4/3)πR^3, dV/dR = 4πR^2. Then expressing this in terms of the separation distance (r) between
+    // the particles (r = 2R), we have 4πR^2 = 4π(r/2)^2 = πr^2
     //
     // Once this has been done, the actual force between the two particles can be determined by multiplying this pressure by the
     // area of a single grid point.
@@ -3350,15 +3353,9 @@ begin
     // Total Pressure = The sum of both the Positive & Negative Power divided by speed of light
     Pressure:=(PowerSum_neg + PowerSum_pos)/SpeedOfLight;
 
-    // The actual pressure at a single, central grid point, where r is the number of grid points between the two
+    // The actual pressure at a single, central grid point is 1/πr^2, where r is the number of grid points between the two
     // particle centers.
-    //
-    // (4/3)πr^3/(r/2) is the number of grid points in the sphere extending from the particle center,
-    // to the other particle's center, multiplied by the number of grid points along the line that
-    // the force acts (from the particle center that the force acts on, to the mid-point between particles).
-    //
-    // The actual pressure, where p1_p2_diff is the number of grid points between the two particle centres.
-    Pressure:=Pressure/( (4/3)*Pi*power(p1_p2_diff/2, 3) / (p1_p2_diff/2) );
+    Pressure:=Pressure/(1 + Pi*sqr(GridWidth*p1_p2_diff*dx/ActualWidth));
 
     // Total force is pressure * the area of 1 point
     Force:= Pressure*PointArea;
@@ -3465,11 +3462,7 @@ begin
         WriteLn(myFile, 'E Energy = ' + FloatToStrf(E_Energy_Tot,ffExponent,5,2) + ', B Energy = ' + FloatToStrf(B_Energy_Tot,ffExponent,5,2) + ', Energy Total = ' + FloatToStrf((E_Energy_Tot + B_Energy_Tot),ffExponent,5,2) + ' : ' + FloatToStr(100*(E_Energy_Tot + B_Energy_Tot)/Etotal) + ' % of ' + FloatToStrf(Etotal,ffExponent,5,2));
         WriteLn(myFile2, FloatToStr(100*Accel/ExpectedAccel));
 
-{$IF TWO_PARTICLE_COULOMB_FORCE}
-        if GridWidth < 316 then begin
-{$ELSE}
         if GridWidth < GRID_LIMIT then begin
-{$IFEND}
           New_GridWidth:=GridWidth + 1;
           New_GridHeight:=GridHeight + 1;
           New_GridDepth:=GridDepth + 1;
@@ -5452,6 +5445,7 @@ var
   amp: Extended;
 begin
   amp:= sqrt(sqr(E_vect.x)/2 + sqr(E_vect.y)/2 + sqr(E_vect.z)/2);
+  //amp:=VectSize(E_vect);
   Result:=0.5*Permittivity*sqr(amp);
 end;
 
@@ -5480,6 +5474,7 @@ var
 begin
   H := BtoH(B_vect);
   amp:= sqrt(sqr(H.x)/2 + sqr(H.y)/2 + sqr(H.z)/2);
+  //amp:=VectSize(H);
   Result:=0.5*Permeability*sqr(amp);
 end;
 
@@ -5538,6 +5533,31 @@ begin
     x:=x/Permeability;
     y:=y/Permeability;
     z:=z/Permeability;
+  end;
+  Result:=vect;
+end;
+
+function RMS_PowerFlowOld(Apoint: point): VectorDouble;
+var
+  vect: VectorDouble;
+begin
+  // Get instantaneous Power Flow
+  vect:=Form1.PowerFlow(Apoint);
+
+  // Calculate RMS of Power Flow (effective, actual Power Flow)
+  // RMS in 3 cartesian coordinate dimensions (x, y, z), as the
+  // wave-function is sinusoidal in all three dimensions:
+  //
+  // Ems=E/√2
+  // ∴ue=(1/4)*ε0*E^2
+  //
+  // Hms=H/√2
+  // ∴ue=(1/4)*μ0*H^2
+
+  with vect do begin
+    x:=(x/4);
+    y:=(y/4);
+    z:=(z/4);
   end;
   Result:=vect;
 end;
