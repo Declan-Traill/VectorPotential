@@ -3358,7 +3358,7 @@ begin
     // the force acts (from the particle center that the force acts on, to the mid-point between particles).
     //
     // The actual pressure, where p1_p2_diff is the number of grid points between the two particle centres.
-    Pressure:=Pressure/( (4/3)*Pi*power(p1_p2_diff/2, 3) / (p1_p2_diff/2) );
+    Pressure:=Pressure/( (4/3)*Pi*power(p1_p2_diff, 3) / (p1_p2_diff/2) );
 
     // Total force is pressure * the area of 1 point
     Force:= Pressure*PointArea;
