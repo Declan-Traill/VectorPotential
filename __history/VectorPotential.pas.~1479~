@@ -24,9 +24,9 @@ const
   // space (i.e. more data points) by reducing the amount of data stored for each point.
   // If these options are changed, the software must be recompiled for it to take effect.
   STANDING_WAVE_ANALYSIS=false;
-  TWO_PARTICLE_COULOMB_FORCE=false;
-  TWO_PARTICLE_REFLECTION_FIELDS=true;
-  TWO_PROTON_MODEL=true;
+  TWO_PARTICLE_COULOMB_FORCE=true;
+  TWO_PARTICLE_REFLECTION_FIELDS=false;
+  TWO_PROTON_MODEL=false;
 
   // Number of points to divide by in vector functions across point groups
   nP=3;
@@ -636,7 +636,7 @@ const
 
   PositronMass=9.1093835611E-31;   // (8.187105650638658873144497804e-14 Joules)
 
-  ElectronMass=9.1093835611E-31;   // (9.1093835611e-31 kg,  8.187105650638658873144497804e-14 Joules)
+  ElectronMass=9.1093835611E-31;   // (8.187105650638658873144497804e-14 Joules)
   ElectronComptonWavelength=2*Pi*Hhat/(ElectronMass*SpeedOfLight); // 2.4263097661e-12
   ElectronComptonRadius=ElectronComptonWavelength/(2*Pi);  // 3.8615919275e-13
   ElectronClassicalRadius=alpha*ElectronComptonRadius;  // 2.8179397774e-15
