@@ -2425,10 +2425,10 @@ begin
                      // y1' = y1
                      // z1' = z1
                      // x2' = -x2
-                     // y2' = -y2
+                     // y2' = y2
                      // z2' = -z2
                      x:=psi_x_particle1 - psi_x_particle2;
-                     y:=psi_y_particle1 - psi_y_particle2;
+                     y:=psi_y_particle1 + psi_y_particle2;
                      z:=psi_z_particle1 - psi_z_particle2;
                    end;
                  end;
@@ -2669,20 +2669,25 @@ begin
                    normal_z:=unit_z;
                  end;
 
-                 if not (pass=3) then begin
-                   x := normal_x*SpinConstant*E_amp/sqr(SpeedOfLight);
-                   y := normal_y*SpinConstant*E_amp/sqr(SpeedOfLight);
-                   z := normal_z*SpinConstant*E_amp/sqr(SpeedOfLight);
-                 end;
+                 //x := normal_x*SpinConstant*E_amp/sqr(SpeedOfLight);
+                 //y := normal_y*SpinConstant*E_amp/sqr(SpeedOfLight);
+                 //z := normal_z*SpinConstant*E_amp/sqr(SpeedOfLight);
 
-                 if two_particles then begin
+                 if two_particles and (pass<>3) then begin
+
+                 x := normal_x*SpinConstant*E_amp/sqr(SpeedOfLight);
+                 y := normal_y*SpinConstant*E_amp/sqr(SpeedOfLight);
+                 z := normal_z*SpinConstant*E_amp/sqr(SpeedOfLight);
                    vect.x := 0;
                    vect.y := 0;
                    vect.z := 0;
+                   vect2.x := 0;
+                   vect2.y := 0;
+                   vect2.z := 0;
 
                    if orthogonal_particles then begin
                      if particle2_spin > 0 then begin
-                       if (pass=1) then begin
+                       if (pass=1) or (pass=3) then begin
                          // x1' = x1
                          // y1' = y1
                          // z1' = z1
@@ -2690,17 +2695,17 @@ begin
                          vect.y := y;
                          vect.z := z;
                        end;
-                       if (pass=2) then begin
+                       if (pass=2) or (pass=3) then begin
                          // x2' = z2
                          // y2' = y2
                          // z2' = -x2
-                         vect.x := z;
-                         vect.y := y;
-                         vect.z := -x;
+                         vect2.x := z;
+                         vect2.y := y;
+                         vect2.z := -x;
                        end;
                      end
                      else begin
-                       if (pass=1) then begin
+                       if (pass=1) or (pass=3) then begin
                          // x1' = x1
                          // y1' = y1
                          // z1' = z1
@@ -2708,19 +2713,19 @@ begin
                          vect.y := y;
                          vect.z := z;
                        end;
-                       if (pass=2) then begin
+                       if (pass=2) or (pass=3) then begin
                          // x2' = -z2
                          // y2' = y2
                          // z2' = x2
-                         vect.x := -z;
-                         vect.y := y;
-                         vect.z := x;
+                         vect2.x := -z;
+                         vect2.y := y;
+                         vect2.z := x;
                        end;
                      end;
                    end
                    else if particles_end_to_end then begin
                      if particle2_spin > 0 then begin
-                       if (pass=1) then begin
+                       if (pass=1) or (pass=3) then begin
                          // x1' = z1
                          // y1' = y1
                          // z1' = -x1
@@ -2728,17 +2733,17 @@ begin
                          vect.y := y;
                          vect.z := -x;
                        end;
-                       if (pass=2) then begin
+                       if (pass=2) or (pass=3) then begin
                          // x2' = z2
                          // y2' = y2
                          // z2' = -x2
-                         vect.x := z;
-                         vect.y := y;
-                         vect.z := -x;
+                         vect2.x := z;
+                         vect2.y := y;
+                         vect2.z := -x;
                        end;
                      end
                      else begin
-                       if (pass=1) then begin
+                       if (pass=1) or (pass=3) then begin
                          // x1' = z1
                          // y1' = y1
                          // z1' = -x1
@@ -2746,19 +2751,19 @@ begin
                          vect.y := y;
                          vect.z := -x;
                        end;
-                       if (pass=2) then begin
+                       if (pass=2) or (pass=3) then begin
                          // x2' = -z2
                          // y2' = y2
                          // z2' = x2
-                         vect.x := -z;
-                         vect.y := y;
-                         vect.z := x;
+                         vect2.x := -z;
+                         vect2.y := y;
+                         vect2.z := x;
                        end;
                      end;
                    end
                    else begin
                      if particle2_spin > 0 then begin
-                       if (pass=1) then begin
+                       if (pass=1) or (pass=3) then begin
                          // x1' = x1
                          // y1' = y1
                          // z1' = z1
@@ -2766,17 +2771,17 @@ begin
                          vect.y := y;
                          vect.z := z;
                        end;
-                       if (pass=2) then begin
+                       if (pass=2) or (pass=3) then begin
                          // x2' = x2
                          // y2' = y2
                          // z2' = z2
-                         vect.x := x;
-                         vect.y := y;
-                         vect.z := z;
+                         vect2.x := x;
+                         vect2.y := y;
+                         vect2.z := z;
                        end;
                      end
                      else begin
-                       if (pass=1) then begin
+                       if (pass=1) or (pass=3) then begin
                          // x1' = x1
                          // y1' = y1
                          // z1' = z1
@@ -2784,13 +2789,13 @@ begin
                          vect.y := y;
                          vect.z := z;
                        end;
-                       if (pass=2) then begin
+                       if (pass=2) or (pass=3) then begin
                          // x2' = -x2
-                         // y2' = -y2
+                         // y2' = y2
                          // z2' = -z2
-                         vect.x := -x;
-                         vect.y := -y;
-                         vect.z := -z;
+                         vect2.x := -x;
+                         vect2.y := y;
+                         vect2.z := -z;
                        end;
                      end;
                    end;
@@ -2801,14 +2806,9 @@ begin
                      z:=vect.z;
                    end
                    else if (pass=2) then begin
-                     x:=vect.x;
-                     y:=vect.y;
-                     z:=vect.z;
-                   end
-                   else if (pass=3) then begin
-                     x := particle1_A[xpos,ypos,zpos].x + particle2_A[xpos,ypos,zpos].x;
-                     y := particle1_A[xpos,ypos,zpos].y + particle2_A[xpos,ypos,zpos].y;
-                     z := particle1_A[xpos,ypos,zpos].z + particle2_A[xpos,ypos,zpos].z;
+                     x:=vect2.x;
+                     y:=vect2.y;
+                     z:=vect2.z;
                    end;
                  end;
                end
@@ -2837,6 +2837,11 @@ begin
                end
                else if (pass=2) then begin
                  PrevVectorPotential:=particle2_A[xpos,ypos,zpos];
+               end
+               else if (pass=3) and smoothing then begin
+                 x := particle1_A[xpos,ypos,zpos].x + particle2_A[xpos,ypos,zpos].x;
+                 y := particle1_A[xpos,ypos,zpos].y + particle2_A[xpos,ypos,zpos].y;
+                 z := particle1_A[xpos,ypos,zpos].z + particle2_A[xpos,ypos,zpos].z;
                end;
              end
              else begin
@@ -2845,9 +2850,15 @@ begin
 
              if not E_useFormula or smoothing then begin
                if (smoothing) then begin
-                 ElecFieldFromA.x := 0;
-                 ElecFieldFromA.y := 0;
-                 ElecFieldFromA.z := 0;
+                 ElecFieldFromA.x := (1/TimeStep)*(points[NewScreen]^[xpos,ypos,zpos].VectorPotential.x - PrevVectorPotential.x);
+                 ElecFieldFromA.y := (1/TimeStep)*(points[NewScreen]^[xpos,ypos,zpos].VectorPotential.y - PrevVectorPotential.y);
+                 ElecFieldFromA.z := (1/TimeStep)*(points[NewScreen]^[xpos,ypos,zpos].VectorPotential.z - PrevVectorPotential.z);
+
+                 if (pass=3) and smoothing then begin
+                   PrevVectorPotential.x := particle1_A[xpos,ypos,zpos].x + particle2_A[xpos,ypos,zpos].x;
+                   PrevVectorPotential.y := particle1_A[xpos,ypos,zpos].y + particle2_A[xpos,ypos,zpos].y;
+                   PrevVectorPotential.z := particle1_A[xpos,ypos,zpos].z + particle2_A[xpos,ypos,zpos].z;
+                 end;
                end
                else begin
                  // dA/dt = -(Me*c/Hhat)^2*Ye
