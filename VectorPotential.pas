@@ -795,7 +795,7 @@ var
   two_particle_analysis, two_particle_accel_profile_done, profile_changed: boolean;
   two_particle_accel_profile, two_particle_accel_dist_profile, two_particle_accel_actual_width_profile: boolean;
   myFile, myFile2 : TextFile;
-  justRestored: boolean;
+  justRestored, photon: boolean;
 implementation
 
 {$R *.DFM}
@@ -1237,19 +1237,63 @@ begin
   ProgressBar1.Position := Round(2*progress);
 end;
 
+function photon_rescale_factor(): double;
+var
+  scale: double;
+begin
+      case DisplayField of   {depending on which field is required to display}
+        PSI_VECTOR_FIELD:
+          scale:=7.0E9;
+{$IF NOT TWO_PARTICLE_COULOMB_FORCE}
+        PSI_SCALAR_FIELD:
+          scale:=1.5E-9;
+        ELECTRIC_POTENTIAL_FIELD:
+          scale:=6.5E-3;
+        HERTZIAN_FIELD:
+          scale:=1.5E-9;
+        VECTOR_POTENTIAL_FIELD:
+          scale:=7.0E26;
+{$IFEND}
+        ELECTRIC_FIELD:
+          scale:=8.0E-16;
+        MAGNETIC_FIELD:
+          scale:=5.0E13;
+        E_ELECTRIC_FIELD:
+          scale:=3.0E-19;
+        E_MAGNETIC_FIELD:
+          scale:=1.0E23;
+        POWER_FLOW_FIELD:
+          scale:=2.0E-7;
+{$IF NOT TWO_PARTICLE_COULOMB_FORCE}
+        CHARGE_DENSITY_FIELD:
+          scale:=3.0E-16;
+        PSI_CURL_VECTOR_FIELD:
+          scale:=3.0E-3;
+{$IFEND}
+{$IF TWO_PARTICLE_REFLECTION_FIELDS}
+        PARTICLE_POS_REFLECTED_FIELD:
+          scale:=1.5E9;
+        PARTICLE_NEG_REFLECTED_FIELD:
+          scale:=1.5E9;
+{$IFEND}
+      end;
+
+      result:=scale;
+end;
+
 procedure TForm1.RecalcFields(scr:smallint);
 label
   NeutronNext;
 var
-  electron, positron, proton, neutron, neutrino, quark_up, quark_down, photon: boolean;
-  r,r1,r2,x,y,z,unit_x,unit_y,unit_z,actual_x,actual_y,actual_z,r_lower_limit,wave_r,wave_x : extended;
+  electron, positron, proton, neutron, neutrino, quark_up, quark_down: boolean;
+  r,r1,r2,x,y,z,unit_x,unit_y,unit_z,actual_x,actual_y,actual_z,r_lower_limit,wave_r,wave_x,wave_xpos : extended;
   theta, theta1, theta2, delta, delta1, delta2, theta_const, theta_const1, theta_const2, expTheta, lnTheta, theta_xy : extended;
   term0, term1, term1a, term1b, term2, term2a, term2b, term3, term3a, term3b : extended;
   psi_x, psi_y, psi_z, psi_x_particle1, psi_y_particle1, psi_z_particle1, psi_x_particle2, psi_y_particle2, psi_z_particle2 : extended;
   normal_x,normal_y,normal_z,dir_x,dir_y,dir_z : extended;
   scalar_amp, Vector_amp, SpinConstant, E_amp, A_amp, ShellThickness : extended;
   NewScreen : smallint;
-  xpos,ypos,zpos,midx,midy,midz,wavelength_x,wave_num:smallint;
+  xpos,ypos,zpos,midx,midy,midz,wavelength_x,wave_num,wave0:smallint;
   ThisGroup,NewGroup: PointGrp;
   vect,vect2,CurlVect,DivVect: vector;
   Scalar_Group: ScalarGrp;
@@ -1261,7 +1305,7 @@ var
   AveragePowerPerPoint,ReflectedPowerAtPoint,PressurePerPoint,Force,Accel: Extended;
   PowerCount_neg, PowerCount_pos: integer;
   PowerSum_neg, PowerSum_pos, Pressure, Power_x1, Power_x2, dot_v1v2, reflected_power: Extended;
-  PrevVectorPotential, ElecFieldFromV, ElecFieldFromA: Vector;
+  ElecFieldFromV, ElecFieldFromA: Vector;
   PowerCorrectionFactor_E, PowerCorrectionFactor_B, EnergyFactor: Extended;
   ElectricPotentialSum_pos, ElectricPotentialSum_neg, ElectricPotentialSum: extended;
   PsiSum, PsiSumXpos, PsiSumYpos, PsiSumZpos, PsiSumXneg, PsiSumYneg, PsiSumZneg: extended;
@@ -1578,6 +1622,7 @@ begin
       end;
 
    30: begin  // if a Photon being modeled
+       r_lower_limit:=ElectronComptonRadius/1;
        electron:=false;
        positron:=false;
        proton:=false;
@@ -1650,9 +1695,9 @@ begin
       ArrowScaleScroll.Position:= 500;
       New_ArrowScaleFactor := ArrowScaleScroll.Position;
       ActualGridWidth.Text := FloatToStrf(8.0E-12,ffExponent,5,2); {display actual size in metres that grid represents}
-      New_GridWidth:=30;
-      New_GridHeight:=30;
-      New_GridDepth:=30;
+      New_GridWidth:=70;
+      New_GridHeight:=70;
+      New_GridDepth:=70;
       GridX.Text:=IntToStr(New_GridWidth);
       GridY.Text:=IntToStr(New_GridHeight);
       GridZ.Text:=IntToStr(New_GridDepth);
@@ -2312,14 +2357,48 @@ begin
                end;
 
                30: begin  // if a Photon being modeled
-                   New_ReScale := 1.5E9;
                    wavelength_x := Trunc(GridWidth*ElectronComptonWavelength/ActualWidth);
                    wave_x := Trunc(2*GridWidth - SpeedOfLight*Time/dx);
-                   wave_num := Trunc((xpos + SpeedOfLight*Time/dx)/(wavelength_x/2));
-                   wave_r:=sqrt( sqr((xpos - (wave_num + 0.5)*(wavelength_x/2))*dx + SpeedOfLight*Time) + sqr(y*dy) + sqr(z*dz) );
+
+                   wave_r:=sqrt( sqr(y*dy) + sqr(z*dz) )/12;
                    if ( wave_r < r_lower_limit ) then wave_r:=r_lower_limit;   // prevent divide by zero errors
-                   theta:=theta_const*Time;
-                   term1:=exp(-(abs(x - wave_x)/(2*wavelength_x)))*delta/wave_r;
+
+                   term1 := exp(-(abs(x - wave_x)/(2*wavelength_x)))*delta/wave_r;
+
+                   with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
+                     x := 0;
+                     y := 0;
+                     z := 0;
+                   end;
+
+                   psi_x := 0;
+                   psi_y := 0;
+                   psi_z := 0;
+
+                   wave0 := Trunc((SpeedOfLight*Time/dx)/(wavelength_x/2));
+                   for wave_num := (wave0 - 10) to Trunc(wave0 + 10 + GridWidth/(wavelength_x/2)) do begin
+                     // Calc Psi vector
+                     wave_xpos := ((0.5 + wave_num)*(wavelength_x/2)) - SpeedOfLight*Time/dx;
+                     theta:=-(arctan2((xpos - wave_xpos - wavelength_x/4), y));
+                     if ((wave_num mod 2) <> 0) then theta := theta - PI;
+
+                     SinCos(theta, term3, term2);
+
+                     psi_x := psi_x + term1 * term2;
+                     psi_y := psi_y + term1 * term3;
+
+                     // Calc VectorPotential which is -1/c^2 * d/dt of Psi, so Pi/2 phase advance and d(sin(theta))/dt = cos(theta)
+                     wave_xpos := ((0.5 + wave_num)*(wavelength_x/2)) - SpeedOfLight*Time/dx;
+                     theta:=-(arctan2((xpos - wave_xpos), y));
+                     if ((wave_num mod 2) <> 0) then theta := theta - PI;
+
+                     SinCos(theta, term3, term2);
+
+                     with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
+                       x := x - (1/sqr(SpeedOfLight)) * term1 * term2;
+                       y := y - (1/sqr(SpeedOfLight)) * term1 * term3;
+                     end;
+                   end;
                end;
              end;
 
@@ -2343,15 +2422,10 @@ begin
                end
                else begin
                  SinCos(theta, term3, term2);
-
-                 if photon then begin
-                   // reverse the angle theta for every odd loop of the EM wave packet.
-                   if ((wave_num mod 2) <> 0) then SinCos(-theta, term3, term2);
-                 end;
                end;
              end;
 
-             if not two_particles then begin
+             if not (two_particles or photon) then begin
                psi_x := term1 * term2;
                psi_y := term1 * term3;
                psi_z := 0;
@@ -2436,7 +2510,7 @@ begin
 {$IF NOT TWO_PARTICLE_COULOMB_FORCE}
                  points[NewScreen]^[xpos,ypos,zpos].Psi := term1a + term1b;
 {$IFEND}
-               end
+               end // end of: if two_particles
                else begin
                  x:=psi_x;
                  y:=psi_y;
@@ -2652,7 +2726,7 @@ begin
              // (multiplying by i rotates the vector 90 degrees in the complex plane).
              // so use the Normal vector to the div(V) vector and the Static Electric field amplitude (E_amp).
 
-             with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
+             if not photon then with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
                if (smoothing) then begin
                  // get amplitude of Static Electric field component
                  E_amp:=VectSize(ElecFieldFromV);
@@ -2795,23 +2869,18 @@ begin
                      end;
                    end;
 
-                   if (pass=1) then begin
-                     x:=vect.x;
-                     y:=vect.y;
-                     z:=vect.z;
-                   end
-                   else if (pass=2) then begin
-                     x:=vect.x;
-                     y:=vect.y;
-                     z:=vect.z;
-                   end
-                   else if (pass=3) then begin
+                   if (pass=3) then begin
                      x := particle1_A[xpos,ypos,zpos].x + particle2_A[xpos,ypos,zpos].x;
                      y := particle1_A[xpos,ypos,zpos].y + particle2_A[xpos,ypos,zpos].y;
                      z := particle1_A[xpos,ypos,zpos].z + particle2_A[xpos,ypos,zpos].z;
+                   end
+                   else begin
+                     x:=vect.x;
+                     y:=vect.y;
+                     z:=vect.z;
                    end;
                  end;
-               end
+               end   // end of: if (smoothing)
                else begin
                  // Rotation Matrix, multiplying by -i (clockwise rotation, viewed from the top):
                  //
@@ -2828,20 +2897,6 @@ begin
              end;
 
              if field_stats and (pass=1) then VectorPotential_Sum:= VectorPotential_Sum + VectSize(points[NewScreen]^[xpos,ypos,zpos].VectorPotential);
-
-//             PrevVectorPotential:= points[scr]^[xpos,ypos,zpos].VectorPotential;
-
-             if two_particles then begin
-               if (pass=1) then begin
-                 PrevVectorPotential:=particle1_A[xpos,ypos,zpos];
-               end
-               else if (pass=2) then begin
-                 PrevVectorPotential:=particle2_A[xpos,ypos,zpos];
-               end;
-             end
-             else begin
-               PrevVectorPotential:=particle1_A[xpos,ypos,zpos];
-             end;
 
              if not E_useFormula or smoothing then begin
                if (smoothing) then begin
@@ -5082,6 +5137,8 @@ begin
       else
         Caption:='Freeze Time';
   end;
+
+  if photon then New_ReScale := photon_rescale_factor();
 
   {Update the Auto-Scale selection}
   if (New_AutoScale<>AutoScale) or FirstPass then begin
