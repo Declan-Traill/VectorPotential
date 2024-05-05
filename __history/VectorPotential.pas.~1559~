@@ -1243,27 +1243,27 @@ var
 begin
       case DisplayField of   {depending on which field is required to display}
         PSI_VECTOR_FIELD:
-          scale:=7.0E9;
+          scale:=2.0E10;
 {$IF NOT TWO_PARTICLE_COULOMB_FORCE}
         PSI_SCALAR_FIELD:
           scale:=1.5E-9;
         ELECTRIC_POTENTIAL_FIELD:
-          scale:=6.5E-3;
+          scale:=1.5E-2;
         HERTZIAN_FIELD:
           scale:=1.5E-9;
         VECTOR_POTENTIAL_FIELD:
-          scale:=2.0E5;
+          scale:=2.0E27;
 {$IFEND}
         ELECTRIC_FIELD:
-          scale:=8.0E-16;
+          scale:=3.0E-15;
         MAGNETIC_FIELD:
-          scale:=2.0E-8;
+          scale:=3.0E14;
         E_ELECTRIC_FIELD:
-          scale:=3.0E-19;
+          scale:=3.0E-18;
         E_MAGNETIC_FIELD:
-          scale:=2.0E-21;
+          scale:=3.0E-4;
         POWER_FLOW_FIELD:
-          scale:=2.0E-7;
+          scale:=5.0E-13;
 {$IF NOT TWO_PARTICLE_COULOMB_FORCE}
         CHARGE_DENSITY_FIELD:
           scale:=3.0E-16;
@@ -1293,7 +1293,7 @@ var
   normal_x,normal_y,normal_z,dir_x,dir_y,dir_z : extended;
   scalar_amp, Vector_amp, SpinConstant, E_amp, A_amp, ShellThickness : extended;
   NewScreen : smallint;
-  xpos,ypos,zpos,midx,midy,midz,wavelength_x,wave_num,wave0:smallint;
+  xpos,ypos,zpos,midx,midy,midz,wavelength_x,wave_num:smallint;
   ThisGroup,NewGroup: PointGrp;
   vect,vect2,CurlVect,DivVect: vector;
   Scalar_Group: ScalarGrp;
@@ -1695,9 +1695,9 @@ begin
       ArrowScaleScroll.Position:= 500;
       New_ArrowScaleFactor := ArrowScaleScroll.Position;
       ActualGridWidth.Text := FloatToStrf(8.0E-12,ffExponent,5,2); {display actual size in metres that grid represents}
-      New_GridWidth:=70;
-      New_GridHeight:=70;
-      New_GridDepth:=70;
+      New_GridWidth:=50;
+      New_GridHeight:=50;
+      New_GridDepth:=50;
       GridX.Text:=IntToStr(New_GridWidth);
       GridY.Text:=IntToStr(New_GridHeight);
       GridZ.Text:=IntToStr(New_GridDepth);
@@ -2360,11 +2360,6 @@ begin
                    wavelength_x := Trunc(GridWidth*ElectronComptonWavelength/ActualWidth);
                    wave_x := Trunc(2*GridWidth - SpeedOfLight*Time/dx);
 
-                   wave_r:=sqrt( sqr(y*dy) + sqr(z*dz) )/12;
-                   if ( wave_r < r_lower_limit ) then wave_r:=r_lower_limit;   // prevent divide by zero errors
-
-                   term1 := exp(-(abs(xpos - wave_x)/(2*wavelength_x)))*delta/wave_r;
-
                    with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
                      x := 0;
                      y := 0;
@@ -2375,29 +2370,37 @@ begin
                    psi_y := 0;
                    psi_z := 0;
 
-                   wave0 := Trunc((SpeedOfLight*Time/dx)/(wavelength_x/2));
-                   for wave_num := (wave0 - 10) to Trunc(wave0 + 10 + GridWidth/(wavelength_x/2)) do begin
+                   for wave_num := -10 to Trunc(10 + GridWidth/(wavelength_x/2)) do begin
+                     //wave_num := Trunc((xpos + SpeedOfLight*Time/dx)/(wavelength_x/2));
                      wave_xpos := ((0.5 + wave_num)*(wavelength_x/2)) - SpeedOfLight*Time/dx;
+                     wave_r:=sqrt( sqr(y*dy) + sqr(z*dz) )/12;
+                     if ( wave_r < r_lower_limit ) then wave_r:=r_lower_limit;   // prevent divide by zero errors
 
-                     // Calc Psi vector
+                     theta:=-(arctan2((xpos - wave_xpos), y));
+                     if ((wave_num mod 2) <> 0) then theta := theta - PI;
+
+                     term1 := exp(-(abs(x - wave_x)/(2*wavelength_x)))*delta/wave_r;
+
+                     // Calc VectorPotential which is -1/c^2 * d/dt of Psi, so Pi/2 phase advance and d(sin(theta))/dt = cos(theta)
+                     term1b := term1;// * abs(sin(2*PI*(xpos - wave_xpos)/wavelength_x));
+                     SinCos(theta, term3, term2);
+
+                     with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
+                       x := x - (1/sqr(SpeedOfLight)) * term1b * term2;
+                       y := y - (1/sqr(SpeedOfLight)) * term1b * term3;
+                     end;
+
+                     //wave_num := Trunc(-0.5 + (xpos + SpeedOfLight*Time/dx)/(wavelength_x/2));
+                     wave_xpos := ((0.5 + wave_num)*(wavelength_x/2)) - SpeedOfLight*Time/dx;
                      theta:=-(arctan2((xpos - wave_xpos - wavelength_x/4), y));
                      if ((wave_num mod 2) <> 0) then theta := theta - PI;
+
+                     //term1 := term1 * abs(cos(2*PI*(xpos - wave_xpos)/wavelength_x));
 
                      SinCos(theta, term3, term2);
 
                      psi_x := psi_x + term1 * term2;
                      psi_y := psi_y + term1 * term3;
-
-                     // Calc VectorPotential which is -1/c^2 * d/dt of Psi, so Pi/2 phase advance and d(sin(theta))/dt = cos(theta)
-                     theta:=-(arctan2((xpos - wave_xpos), y));
-                     if ((wave_num mod 2) <> 0) then theta := theta - PI;
-
-                     SinCos(theta, term3, term2);
-
-                     with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
-                       x := x - (1/sqr(SpeedOfLight)) * term1 * term2 / TimeStep;
-                       y := y - (1/sqr(SpeedOfLight)) * term1 * term3 / TimeStep;
-                     end;
                    end;
                end;
              end;
@@ -2919,10 +2922,18 @@ begin
                // Electric Field is: -grad(div) of Psi (grad of ElectricPotential Field) - d/dt of Vector Potential field
                // In Electric, we already have -grad(div(Psi)), now subtract d/dt of Vector Potential field
                with points[NewScreen]^[xpos,ypos,zpos].Electric do begin
-                 // E = -grad(div(Psi)) - dA/dt
-                 x := ElecFieldFromV.x - ElecFieldFromA.x;
-                 y := ElecFieldFromV.y - ElecFieldFromA.y;
-                 z := ElecFieldFromV.z - ElecFieldFromA.z;
+                 //if not photon then begin
+                   // E = -grad(div(Psi)) - dA/dt
+                   x := ElecFieldFromV.x - ElecFieldFromA.x;
+                   y := ElecFieldFromV.y - ElecFieldFromA.y;
+                   z := ElecFieldFromV.z - ElecFieldFromA.z;
+                 //end
+                 //else begin
+                 //  // E = -dA/dt
+                 //  x := -ElecFieldFromA.x;
+                 //  y := -ElecFieldFromA.y;
+                 //  z := -ElecFieldFromA.z;
+                 //end;
                end;
              end;
 {$IFEND}

@@ -2358,12 +2358,14 @@ begin
 
                30: begin  // if a Photon being modeled
                    wavelength_x := Trunc(GridWidth*ElectronComptonWavelength/ActualWidth);
-                   wave_x := Trunc(2*GridWidth - SpeedOfLight*Time/dx);
+                   //wave_x := Trunc(2*GridWidth - SpeedOfLight*Time/dx);
+wave_x := Trunc(0.1*2*GridWidth - SpeedOfLight*Time/dx);
 
                    wave_r:=sqrt( sqr(y*dy) + sqr(z*dz) )/12;
                    if ( wave_r < r_lower_limit ) then wave_r:=r_lower_limit;   // prevent divide by zero errors
 
-                   term1 := exp(-(abs(xpos - wave_x)/(2*wavelength_x)))*delta/wave_r;
+                   //term1 := exp(-(abs(xpos - wave_x)/(2*wavelength_x)))*delta/wave_r;
+term1:=delta/wave_r;
 
                    with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
                      x := 0;

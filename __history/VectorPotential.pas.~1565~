@@ -1252,16 +1252,16 @@ begin
         HERTZIAN_FIELD:
           scale:=1.5E-9;
         VECTOR_POTENTIAL_FIELD:
-          scale:=2.0E5;
+          scale:=7.0E26;
 {$IFEND}
         ELECTRIC_FIELD:
           scale:=8.0E-16;
         MAGNETIC_FIELD:
-          scale:=2.0E-8;
+          scale:=5.0E13;
         E_ELECTRIC_FIELD:
           scale:=3.0E-19;
         E_MAGNETIC_FIELD:
-          scale:=2.0E-21;
+          scale:=1.0E23;
         POWER_FLOW_FIELD:
           scale:=2.0E-7;
 {$IF NOT TWO_PARTICLE_COULOMB_FORCE}
@@ -2363,7 +2363,7 @@ begin
                    wave_r:=sqrt( sqr(y*dy) + sqr(z*dz) )/12;
                    if ( wave_r < r_lower_limit ) then wave_r:=r_lower_limit;   // prevent divide by zero errors
 
-                   term1 := exp(-(abs(xpos - wave_x)/(2*wavelength_x)))*delta/wave_r;
+                   term1 := exp(-(abs(x - wave_x)/(2*wavelength_x)))*delta/wave_r;
 
                    with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
                      x := 0;
@@ -2377,9 +2377,8 @@ begin
 
                    wave0 := Trunc((SpeedOfLight*Time/dx)/(wavelength_x/2));
                    for wave_num := (wave0 - 10) to Trunc(wave0 + 10 + GridWidth/(wavelength_x/2)) do begin
-                     wave_xpos := ((0.5 + wave_num)*(wavelength_x/2)) - SpeedOfLight*Time/dx;
-
                      // Calc Psi vector
+                     wave_xpos := ((0.5 + wave_num)*(wavelength_x/2)) - SpeedOfLight*Time/dx;
                      theta:=-(arctan2((xpos - wave_xpos - wavelength_x/4), y));
                      if ((wave_num mod 2) <> 0) then theta := theta - PI;
 
@@ -2389,14 +2388,15 @@ begin
                      psi_y := psi_y + term1 * term3;
 
                      // Calc VectorPotential which is -1/c^2 * d/dt of Psi, so Pi/2 phase advance and d(sin(theta))/dt = cos(theta)
+                     wave_xpos := ((0.5 + wave_num)*(wavelength_x/2)) - SpeedOfLight*Time/dx;
                      theta:=-(arctan2((xpos - wave_xpos), y));
                      if ((wave_num mod 2) <> 0) then theta := theta - PI;
 
                      SinCos(theta, term3, term2);
 
                      with points[NewScreen]^[xpos,ypos,zpos].VectorPotential do begin
-                       x := x - (1/sqr(SpeedOfLight)) * term1 * term2 / TimeStep;
-                       y := y - (1/sqr(SpeedOfLight)) * term1 * term3 / TimeStep;
+                       x := x - (1/sqr(SpeedOfLight)) * term1 * term2;
+                       y := y - (1/sqr(SpeedOfLight)) * term1 * term3;
                      end;
                    end;
                end;
