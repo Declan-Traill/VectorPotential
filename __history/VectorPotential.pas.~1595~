@@ -4455,7 +4455,7 @@ repeat
 
         // save jpeg image if required
         if (save_frames and VectorType and ArrowsOn and (not TileZ)) then
-          SaveJpegImage(k, ThisBitmap, ArrowsOn);
+          SaveJpegImage(k, ThisBitmap, false);
       end;
 
       if TileZ then                    {if Z Plane tiling required}
@@ -4607,7 +4607,7 @@ repeat
   end;
 
   // save jpeg image if required
-  if ( save_frames ) then SaveJpegImage(k, ThisBitmap, ArrowsOn);
+  if ( save_frames ) then SaveJpegImage(k, ThisBitmap, true);
 
 until (not (save_frames and save_3D)) or (k>GridDepth-1); {only repeat if tiling req'd and Z plane in range}
 
@@ -5877,34 +5877,14 @@ begin
       end;
     end;
 
-    if dipole_vectors then begin
-      MoveTo(x,y);                     {start the vector from the point (x,y) }
-      if VectorX.Checked then          {if x axis vectors required calc xpos}
-        xpos:=round2(x+(arrow.x)/2)
-      else xpos:=x;                    {else use x value of starting point}
-      if VectorY.Checked then          {if y axis vectors required calc ypos}
-        ypos:=round2(y+(arrow.y)/2)
-      else ypos:=y;                    {else use y value of starting point}
-      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
-      MoveTo(x,y);                     {start the vector from the point (x,y) }
-      if VectorX.Checked then          {if x axis vectors required calc xpos}
-        xpos:=round2(x-(arrow.x)/2)
-      else xpos:=x;                    {else use x value of starting point}
-      if VectorY.Checked then          {if y axis vectors required calc ypos}
-        ypos:=round2(y-(arrow.y)/2)
-      else ypos:=y;                    {else use y value of starting point}
-      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
-    end
-    else begin
-      MoveTo(x,y);                     {start the vector from the point (x,y) }
-      if VectorX.Checked then          {if x axis vectors required calc xpos}
-        xpos:=round2(x+(arrow.x))
-      else xpos:=x;                    {else use x value of starting point}
-      if VectorY.Checked then          {if y axis vectors required calc ypos}
-        ypos:=round2(y+(arrow.y))
-      else ypos:=y;                    {else use y value of starting point}
-      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
-    end;
+    MoveTo(x,y);                     {start the vector from the point (x,y) }
+    if VectorX.Checked then          {if x axis vectors required calc xpos}
+      xpos:=round2(x+(arrow.x))
+    else xpos:=x;                    {else use x value of starting point}
+    if VectorY.Checked then          {if y axis vectors required calc ypos}
+      ypos:=round2(y+(arrow.y))
+    else ypos:=y;                    {else use y value of starting point}
+    LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
     if VectorZ.Checked then begin    {if z axis vectors required,}
       zsize:=round2(arrow.z);        {calc vector size}
       if arrow.z>0 then begin        {if z>0 (coming out of the page) draw circle of appropriate size}
@@ -5918,6 +5898,16 @@ begin
         MoveTo(x-zsize,y+zsize);     {look - make both sides look even}
         LineTo(x+zsize-1,y-zsize+1);
       end;
+    end;
+    if dipole_vectors then begin
+      MoveTo(x,y);                     {start the vector from the point (x,y) }
+      if VectorX.Checked then          {if x axis vectors required calc xpos}
+        xpos:=round2(x-(arrow.x))
+      else xpos:=x;                    {else use x value of starting point}
+      if VectorY.Checked then          {if y axis vectors required calc ypos}
+        ypos:=round2(y-(arrow.y))
+      else ypos:=y;                    {else use y value of starting point}
+      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
     end;
   end;
 end;

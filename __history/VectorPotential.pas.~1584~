@@ -351,7 +351,6 @@ type            {Type declaration for a vector resolved into x,y & z components}
     Start28: TRadioButton;
     Start29: TRadioButton;
     Start30: TRadioButton;
-    Dipoles: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure Start2Click(Sender: TObject);
@@ -464,7 +463,6 @@ type            {Type declaration for a vector resolved into x,y & z components}
     procedure Profile_RadioButton_GridSizeClick(Sender: TObject);
     procedure Profile_RadioButton_DistanceClick(Sender: TObject);
     procedure Profile_RadioButton_ActualSizeClick(Sender: TObject);
-    procedure DipolesClick(Sender: TObject);
   private
     { Private declarations }
      procedure WMSysCommand (var Msg: TWMSysCommand) ; message WM_SYSCOMMAND;
@@ -797,7 +795,7 @@ var
   two_particle_analysis, two_particle_accel_profile_done, profile_changed: boolean;
   two_particle_accel_profile, two_particle_accel_dist_profile, two_particle_accel_actual_width_profile: boolean;
   myFile, myFile2 : TextFile;
-  justRestored, photon, dipole_vectors: boolean;
+  justRestored, photon: boolean;
 implementation
 
 {$R *.DFM}
@@ -881,7 +879,6 @@ begin
     Flip_YZ:=false;
     New_ArrowScaleFactor := ArrowScaleScroll.Position;
     ViewTop := ViewFromTop.Checked;
-    dipole_vectors:=false;
 
     // Don't reset these if profiling - so frames can be captured of the whole profile if needed
     if two_particle_accel_profile_done then begin
@@ -2381,7 +2378,7 @@ begin
                    psi_z := 0;
 
                    wave0 := Trunc((SpeedOfLight*Time/dx)/(wavelength_x/2));
-                   for wave_num := (wave0 - 200) to Trunc(wave0 + 200 + GridWidth/(wavelength_x/2)) do begin
+                   for wave_num := (wave0 - 10) to Trunc(wave0 + 10 + GridWidth/(wavelength_x/2)) do begin
                      wave_xpos := ((0.5 + wave_num)*(wavelength_x/2)) - SpeedOfLight*Time/dx;
 
                      // Calc Psi vector
@@ -4065,87 +4062,6 @@ begin
   Application.Terminate;
 end;
 
-procedure SaveJpegImage(k :smallint; ThisBitmap: Tbitmap; arrows: boolean);
-var
-  JpegImage: TJpegImage;
-  OutStream: TFileStream;
-  path,fname,zstr: string;
-begin
-  // convert to jpeg and save
-  try
-    JpegImage := TJpegImage.Create;
-    JpegImage.Assign(ThisBitmap);
-
-    path := '.\Frames\';
-
-    if (not arrows) then path:=path+'NoVectorArrows\';
-
-    case DisplayField of   {depending on which field is required to display}
-      PSI_VECTOR_FIELD:
-        fname := 'PsiVectWaveEqn';
-{$IF NOT TWO_PARTICLE_COULOMB_FORCE}
-      PSI_SCALAR_FIELD:
-        fname := 'PsiWaveEqnScalar';
-      ELECTRIC_POTENTIAL_FIELD:
-        fname := 'ElecPotential';
-      HERTZIAN_FIELD:
-        fname := 'HertzianVect';
-      VECTOR_POTENTIAL_FIELD:
-        fname := 'VectPotential';
-{$IFEND}
-      ELECTRIC_FIELD:
-        fname := 'Electric';
-      MAGNETIC_FIELD:
-        fname := 'Magnetic';
-      E_ELECTRIC_FIELD:
-        fname := 'E_Energy';
-      E_MAGNETIC_FIELD:
-        fname := 'B_Energy';
-      POWER_FLOW_FIELD:
-        fname := 'Power';
-{$IF NOT TWO_PARTICLE_COULOMB_FORCE}
-      CHARGE_DENSITY_FIELD:
-        fname := 'ChargeDensity';
-      PSI_CURL_VECTOR_FIELD:
-        fname := 'PsiCurl';
-{$IFEND}
-{$IF TWO_PARTICLE_REFLECTION_FIELDS}
-      PARTICLE_POS_REFLECTED_FIELD:
-        fname := 'Particle_pos_Reflected';
-      PARTICLE_NEG_REFLECTED_FIELD:
-        fname := 'Particle_neg_Reflected';
-{$IFEND}
-    end;
-
-    if (FrameCount < 10) then fname:=fname+'00000'
-    else if (FrameCount < 100) then fname:=fname+'0000'
-    else if (FrameCount < 1000) then fname:=fname+'000'
-    else if (FrameCount < 10000) then fname:=fname+'00'
-    else if (FrameCount < 100000) then fname:=fname+'0';
-
-    if (k < 10) then zstr:='00000'
-    else if (k < 100) then zstr:='0000'
-    else if (k < 1000) then zstr:='000'
-    else if (k < 10000) then zstr:='00'
-    else zstr:='0';
-
-    if not DirectoryExists(path) then CreateDir(path);
-
-    if ( save_3D ) then begin
-      OutStream := TFileStream.Create(path+fname+IntToStr(FrameCount)+'_z'+zstr+IntToStr(k)+'.jpg',fmOpenWrite or fmCreate or fmShareDenyNone);
-    end
-    else begin
-      OutStream := TFileStream.Create(path+fname+IntToStr(FrameCount)+'.jpg',fmOpenWrite or fmCreate);
-    end;
-
-    JpegImage.SaveToStream(OutStream);
-  finally
-    JpegImage.Free;
-    OutStream.Free;
-    OutStream:=nil;
-  end;
-end;
-
 procedure TForm1.UpdateBitmap(scr:smallint);
 {Starting with a new, black, 24bit Colour bitmap, this routine takes all the }
 {relevent selected display options into account and produces a complete bitmap}
@@ -4169,6 +4085,9 @@ var
   p1,p2,p3,p4: point;
   Xstep,Ystep,step_int: smallint;
   GridX,GridY: extended;
+  JpegImage: TJpegImage;
+  OutStream: TFileStream;
+  path,fname,zstr: string;
   Point1,Point2,CopyPoint1,CopyPoint2: Point;
   xpos,ypos,zpos : smallint;
   pixel_count,black_count,white_count: longint;
@@ -4443,7 +4362,7 @@ repeat
       ZplanePos:=k; {set global variable for current Z plane used by PlotPoint}
 
       i:=0;
-      if Rendered then begin   {if colour or greyscale Rendered display req'd}
+      if Rendered then    {if colour or greyscale Rendered display req'd}
         repeat
           j:=0;
           repeat
@@ -4452,11 +4371,6 @@ repeat
           until j>GridHeight-1;
           Inc(i,Xstep);
         until i>Gridwidth-1;
-
-        // save jpeg image if required
-        if (save_frames and VectorType and ArrowsOn and (not TileZ)) then
-          SaveJpegImage(k, ThisBitmap, ArrowsOn);
-      end;
 
       if TileZ then                    {if Z Plane tiling required}
         TileCursor(ThisBitmap,ZplanePos,clGray);
@@ -4606,8 +4520,79 @@ repeat
     end;
   end;
 
-  // save jpeg image if required
-  if ( save_frames ) then SaveJpegImage(k, ThisBitmap, ArrowsOn);
+  if ( save_frames ) then begin
+    // convert to jpeg and save
+    try
+      JpegImage := TJpegImage.Create;
+      JpegImage.Assign(ThisBitmap);
+
+      path := '.\Frames\';
+
+      case DisplayField of   {depending on which field is required to display}
+        PSI_VECTOR_FIELD:
+          fname := 'PsiVectWaveEqn';
+{$IF NOT TWO_PARTICLE_COULOMB_FORCE}
+        PSI_SCALAR_FIELD:
+          fname := 'PsiWaveEqnScalar';
+        ELECTRIC_POTENTIAL_FIELD:
+          fname := 'ElecPotential';
+        HERTZIAN_FIELD:
+          fname := 'HertzianVect';
+        VECTOR_POTENTIAL_FIELD:
+          fname := 'VectPotential';
+{$IFEND}
+        ELECTRIC_FIELD:
+          fname := 'Electric';
+        MAGNETIC_FIELD:
+          fname := 'Magnetic';
+        E_ELECTRIC_FIELD:
+          fname := 'E_Energy';
+        E_MAGNETIC_FIELD:
+          fname := 'B_Energy';
+        POWER_FLOW_FIELD:
+          fname := 'Power';
+{$IF NOT TWO_PARTICLE_COULOMB_FORCE}
+        CHARGE_DENSITY_FIELD:
+          fname := 'ChargeDensity';
+        PSI_CURL_VECTOR_FIELD:
+          fname := 'PsiCurl';
+{$IFEND}
+{$IF TWO_PARTICLE_REFLECTION_FIELDS}
+        PARTICLE_POS_REFLECTED_FIELD:
+          fname := 'Particle_pos_Reflected';
+        PARTICLE_NEG_REFLECTED_FIELD:
+          fname := 'Particle_neg_Reflected';
+{$IFEND}
+      end;
+
+      if (FrameCount < 10) then fname:=fname+'00000'
+      else if (FrameCount < 100) then fname:=fname+'0000'
+      else if (FrameCount < 1000) then fname:=fname+'000'
+      else if (FrameCount < 10000) then fname:=fname+'00'
+      else if (FrameCount < 100000) then fname:=fname+'0';
+
+      if (k < 10) then zstr:='00000'
+      else if (k < 100) then zstr:='0000'
+      else if (k < 1000) then zstr:='000'
+      else if (k < 10000) then zstr:='00'
+      else zstr:='0';
+
+      if not DirectoryExists(path) then CreateDir(path);
+
+      if ( save_3D ) then begin
+        OutStream := TFileStream.Create(path+fname+IntToStr(FrameCount)+'_z'+zstr+IntToStr(k)+'.jpg',fmOpenWrite or fmCreate or fmShareDenyNone);
+      end
+      else begin
+        OutStream := TFileStream.Create(path+fname+IntToStr(FrameCount)+'.jpg',fmOpenWrite or fmCreate);
+      end;
+
+      JpegImage.SaveToStream(OutStream);
+    finally
+      JpegImage.Free;
+      OutStream.Free;
+      OutStream:=nil;
+    end;
+  end;
 
 until (not (save_frames and save_3D)) or (k>GridDepth-1); {only repeat if tiling req'd and Z plane in range}
 
@@ -5388,11 +5373,6 @@ begin
   DoUpdate:=true;
 end;
 
-procedure TForm1.DipolesClick(Sender: TObject);
-begin
-  dipole_vectors := Dipoles.Checked;
-end;
-
 procedure TForm1.DisplayLevelChange(Sender: TObject);
 {The displaylevel slider control has been changed, so re-validate display values}
 begin
@@ -5877,34 +5857,14 @@ begin
       end;
     end;
 
-    if dipole_vectors then begin
-      MoveTo(x,y);                     {start the vector from the point (x,y) }
-      if VectorX.Checked then          {if x axis vectors required calc xpos}
-        xpos:=round2(x+(arrow.x)/2)
-      else xpos:=x;                    {else use x value of starting point}
-      if VectorY.Checked then          {if y axis vectors required calc ypos}
-        ypos:=round2(y+(arrow.y)/2)
-      else ypos:=y;                    {else use y value of starting point}
-      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
-      MoveTo(x,y);                     {start the vector from the point (x,y) }
-      if VectorX.Checked then          {if x axis vectors required calc xpos}
-        xpos:=round2(x-(arrow.x)/2)
-      else xpos:=x;                    {else use x value of starting point}
-      if VectorY.Checked then          {if y axis vectors required calc ypos}
-        ypos:=round2(y-(arrow.y)/2)
-      else ypos:=y;                    {else use y value of starting point}
-      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
-    end
-    else begin
-      MoveTo(x,y);                     {start the vector from the point (x,y) }
-      if VectorX.Checked then          {if x axis vectors required calc xpos}
-        xpos:=round2(x+(arrow.x))
-      else xpos:=x;                    {else use x value of starting point}
-      if VectorY.Checked then          {if y axis vectors required calc ypos}
-        ypos:=round2(y+(arrow.y))
-      else ypos:=y;                    {else use y value of starting point}
-      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
-    end;
+    MoveTo(x,y);                     {start the vector from the point (x,y) }
+    if VectorX.Checked then          {if x axis vectors required calc xpos}
+      xpos:=round2(x+(arrow.x))
+    else xpos:=x;                    {else use x value of starting point}
+    if VectorY.Checked then          {if y axis vectors required calc ypos}
+      ypos:=round2(y+(arrow.y))
+    else ypos:=y;                    {else use y value of starting point}
+    LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
     if VectorZ.Checked then begin    {if z axis vectors required,}
       zsize:=round2(arrow.z);        {calc vector size}
       if arrow.z>0 then begin        {if z>0 (coming out of the page) draw circle of appropriate size}

@@ -351,7 +351,6 @@ type            {Type declaration for a vector resolved into x,y & z components}
     Start28: TRadioButton;
     Start29: TRadioButton;
     Start30: TRadioButton;
-    Dipoles: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure Start2Click(Sender: TObject);
@@ -464,7 +463,6 @@ type            {Type declaration for a vector resolved into x,y & z components}
     procedure Profile_RadioButton_GridSizeClick(Sender: TObject);
     procedure Profile_RadioButton_DistanceClick(Sender: TObject);
     procedure Profile_RadioButton_ActualSizeClick(Sender: TObject);
-    procedure DipolesClick(Sender: TObject);
   private
     { Private declarations }
      procedure WMSysCommand (var Msg: TWMSysCommand) ; message WM_SYSCOMMAND;
@@ -797,7 +795,7 @@ var
   two_particle_analysis, two_particle_accel_profile_done, profile_changed: boolean;
   two_particle_accel_profile, two_particle_accel_dist_profile, two_particle_accel_actual_width_profile: boolean;
   myFile, myFile2 : TextFile;
-  justRestored, photon, dipole_vectors: boolean;
+  justRestored, photon: boolean;
 implementation
 
 {$R *.DFM}
@@ -881,7 +879,6 @@ begin
     Flip_YZ:=false;
     New_ArrowScaleFactor := ArrowScaleScroll.Position;
     ViewTop := ViewFromTop.Checked;
-    dipole_vectors:=false;
 
     // Don't reset these if profiling - so frames can be captured of the whole profile if needed
     if two_particle_accel_profile_done then begin
@@ -2381,7 +2378,7 @@ begin
                    psi_z := 0;
 
                    wave0 := Trunc((SpeedOfLight*Time/dx)/(wavelength_x/2));
-                   for wave_num := (wave0 - 200) to Trunc(wave0 + 200 + GridWidth/(wavelength_x/2)) do begin
+                   for wave_num := (wave0 - 10) to Trunc(wave0 + 10 + GridWidth/(wavelength_x/2)) do begin
                      wave_xpos := ((0.5 + wave_num)*(wavelength_x/2)) - SpeedOfLight*Time/dx;
 
                      // Calc Psi vector
@@ -4078,8 +4075,6 @@ begin
 
     path := '.\Frames\';
 
-    if (not arrows) then path:=path+'NoVectorArrows\';
-
     case DisplayField of   {depending on which field is required to display}
       PSI_VECTOR_FIELD:
         fname := 'PsiVectWaveEqn';
@@ -4116,6 +4111,8 @@ begin
         fname := 'Particle_neg_Reflected';
 {$IFEND}
     end;
+
+    if (not arrows) then fname:=fname+'_NoArrows_';
 
     if (FrameCount < 10) then fname:=fname+'00000'
     else if (FrameCount < 100) then fname:=fname+'0000'
@@ -4454,8 +4451,7 @@ repeat
         until i>Gridwidth-1;
 
         // save jpeg image if required
-        if (save_frames and VectorType and ArrowsOn and (not TileZ)) then
-          SaveJpegImage(k, ThisBitmap, ArrowsOn);
+        if ( save_frames ) then SaveJpegImage(k, ThisBitmap, false);
       end;
 
       if TileZ then                    {if Z Plane tiling required}
@@ -4607,7 +4603,7 @@ repeat
   end;
 
   // save jpeg image if required
-  if ( save_frames ) then SaveJpegImage(k, ThisBitmap, ArrowsOn);
+  if ( save_frames ) then SaveJpegImage(k, ThisBitmap, true);
 
 until (not (save_frames and save_3D)) or (k>GridDepth-1); {only repeat if tiling req'd and Z plane in range}
 
@@ -5388,11 +5384,6 @@ begin
   DoUpdate:=true;
 end;
 
-procedure TForm1.DipolesClick(Sender: TObject);
-begin
-  dipole_vectors := Dipoles.Checked;
-end;
-
 procedure TForm1.DisplayLevelChange(Sender: TObject);
 {The displaylevel slider control has been changed, so re-validate display values}
 begin
@@ -5877,34 +5868,14 @@ begin
       end;
     end;
 
-    if dipole_vectors then begin
-      MoveTo(x,y);                     {start the vector from the point (x,y) }
-      if VectorX.Checked then          {if x axis vectors required calc xpos}
-        xpos:=round2(x+(arrow.x)/2)
-      else xpos:=x;                    {else use x value of starting point}
-      if VectorY.Checked then          {if y axis vectors required calc ypos}
-        ypos:=round2(y+(arrow.y)/2)
-      else ypos:=y;                    {else use y value of starting point}
-      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
-      MoveTo(x,y);                     {start the vector from the point (x,y) }
-      if VectorX.Checked then          {if x axis vectors required calc xpos}
-        xpos:=round2(x-(arrow.x)/2)
-      else xpos:=x;                    {else use x value of starting point}
-      if VectorY.Checked then          {if y axis vectors required calc ypos}
-        ypos:=round2(y-(arrow.y)/2)
-      else ypos:=y;                    {else use y value of starting point}
-      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
-    end
-    else begin
-      MoveTo(x,y);                     {start the vector from the point (x,y) }
-      if VectorX.Checked then          {if x axis vectors required calc xpos}
-        xpos:=round2(x+(arrow.x))
-      else xpos:=x;                    {else use x value of starting point}
-      if VectorY.Checked then          {if y axis vectors required calc ypos}
-        ypos:=round2(y+(arrow.y))
-      else ypos:=y;                    {else use y value of starting point}
-      LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
-    end;
+    MoveTo(x,y);                     {start the vector from the point (x,y) }
+    if VectorX.Checked then          {if x axis vectors required calc xpos}
+      xpos:=round2(x+(arrow.x))
+    else xpos:=x;                    {else use x value of starting point}
+    if VectorY.Checked then          {if y axis vectors required calc ypos}
+      ypos:=round2(y+(arrow.y))
+    else ypos:=y;                    {else use y value of starting point}
+    LineTo(xpos,Ypos);               {draw the vector arrow for the x and/or y displacement}
     if VectorZ.Checked then begin    {if z axis vectors required,}
       zsize:=round2(arrow.z);        {calc vector size}
       if arrow.z>0 then begin        {if z>0 (coming out of the page) draw circle of appropriate size}
