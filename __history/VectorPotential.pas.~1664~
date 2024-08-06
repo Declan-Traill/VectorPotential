@@ -1647,18 +1647,7 @@ begin
        neutron:=true;
        beamplitter:=true;
        beamsplitter_simple:=CheckBox13.Checked;
-
-       try
-         fraction_transmitted:=StrToInt(Edit3.Text)/100;
-       except                       {catch any invalid integer conditions}
-         on E: Exception do
-           Edit3.Text:='40';
-       end;
-       if (fraction_transmitted < 0) or (fraction_transmitted > 1) then begin
-         Edit3.Text:='40';
-         fraction_transmitted:=StrToInt(Edit3.Text)/100;
-       end;
-
+       fraction_transmitted:=0.4;
        r_lower_limit:=NeutronComptonRadius;
        sine_wave_sum:=true;
        two_particles:=false;
@@ -6369,13 +6358,10 @@ var
   tx_percent: smallint;
 begin
   try
-    tx_percent:=StrToInt(Edit3.Text);
+    tx_percent:=StrToInt(Edit3Change.Text);
   except                       {catch any invalid integer conditions}
     on E: Exception do
-      Edit3.Text:='40';
-  end;
-  if (tx_percent < 0) or (tx_percent > 100) then begin
-    Edit3.Text:='40';
+      tx_percent.Text:='40';
   end;
 end;
 

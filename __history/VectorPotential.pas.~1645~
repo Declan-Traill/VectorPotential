@@ -354,9 +354,6 @@ type            {Type declaration for a vector resolved into x,y & z components}
     Dipoles: TCheckBox;
     RadioButton2: TRadioButton;
     Label6: TLabel;
-    CheckBox13: TCheckBox;
-    Edit3: TEdit;
-    Label7: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure Start2Click(Sender: TObject);
@@ -471,7 +468,6 @@ type            {Type declaration for a vector resolved into x,y & z components}
     procedure Profile_RadioButton_DistanceClick(Sender: TObject);
     procedure Profile_RadioButton_ActualSizeClick(Sender: TObject);
     procedure DipolesClick(Sender: TObject);
-    procedure Edit3Change(Sender: TObject);
   private
     { Private declarations }
      procedure WMSysCommand (var Msg: TWMSysCommand) ; message WM_SYSCOMMAND;
@@ -804,7 +800,7 @@ var
   two_particle_analysis, two_particle_accel_profile_done, profile_changed: boolean;
   two_particle_accel_profile, two_particle_accel_dist_profile, two_particle_accel_actual_width_profile: boolean;
   myFile, myFile2 : TextFile;
-  justRestored, photon, dipole_vectors, beamplitter, beamsplitter_simple: boolean;
+  justRestored, photon, dipole_vectors, beamplitter: boolean;
 implementation
 
 {$R *.DFM}
@@ -1327,7 +1323,7 @@ var
   progress, progress_inc, r_contracted, x_contracted, x_velocity, gamma, r_gamma : single;
   expr1, expr2 : Extended;
   Qsin1, Qcos1, Qsin2, Qcos2, c, E0, Q: extended;
-  charge_sign, charge_factor, fraction_transmitted: single;
+  charge_sign, charge_factor, reflected_amp: single;
 
 begin
   progress:=0;
@@ -1646,19 +1642,7 @@ begin
        positron:=false;
        neutron:=true;
        beamplitter:=true;
-       beamsplitter_simple:=CheckBox13.Checked;
-
-       try
-         fraction_transmitted:=StrToInt(Edit3.Text)/100;
-       except                       {catch any invalid integer conditions}
-         on E: Exception do
-           Edit3.Text:='40';
-       end;
-       if (fraction_transmitted < 0) or (fraction_transmitted > 1) then begin
-         Edit3.Text:='40';
-         fraction_transmitted:=StrToInt(Edit3.Text)/100;
-       end;
-
+       reflected_amp:=0.6;
        r_lower_limit:=NeutronComptonRadius;
        sine_wave_sum:=true;
        two_particles:=false;
@@ -2473,7 +2457,7 @@ begin
                    r:=sqrt( sqr(x*dx) + sqr(((GridHeight-1-ypos)-FrameCount)*dy) + sqr(z*dz) );
                    if ( r < r_lower_limit ) then r:=r_lower_limit;   // prevent divide by zero errors
 
-                   if ((GridHeight-1-ypos) < xpos) and ((not beamsplitter_simple) or (beamsplitter_simple and (FrameCount < GridHeight/2))) then begin
+                   if ((GridHeight-1-ypos) < xpos) then begin
 
                      term1:=term1 + delta/r;
 
@@ -2495,13 +2479,9 @@ begin
                    r:=sqrt( sqr((xpos - FrameCount)*dx) + sqr(y*dy) + sqr(z*dz) );
                    if ( r < r_lower_limit ) then r:=r_lower_limit;   // prevent divide by zero errors
 
-                   if (((not beamsplitter_simple) and (xpos > (GridHeight-1-ypos))) or
-                      ((not beamsplitter_simple) and (xpos < (GridHeight-1-ypos)) and (FrameCount > GridHeight/2)) or
-                      (beamsplitter_simple and (xpos > (GridHeight-1-ypos)) and (FrameCount > GridHeight/2))) then begin
-                     if (xpos > (GridHeight-1-ypos)) then
-                       term1:=term1 + delta/r
-                     else
-                       term1:=term1 + fraction_transmitted*delta/r;
+                   if (xpos > (GridHeight-1-ypos)) then begin
+
+                     term1:=term1 + delta/r;
 
                      // X coordinate terms
                      // each IN/OUT wave component is only half the wave-function amplitude
@@ -2523,23 +2503,23 @@ begin
 
                    if ((GridHeight-1-ypos) > xpos) then begin
 
-                     term1:=term1 + fraction_transmitted*delta/r;
+                     term1:=term1 + delta/r;
 
                      // X coordinate terms
                      // each IN/OUT wave component is only half the wave-function amplitude
-                     term2:=term2 + 2.0 * 0.5*Cos(theta_const*(-Time - r/(SpeedOfLight + x_velocity)));  // OUT   y2
-                     //term2:=term2 + 2.0 * 0.5*Cos(theta_const*(Time - r/(SpeedOfLight + x_velocity)));   // OUT   y1
-                     //term2:=term2 - 2.0 * 0.5*Cos(theta_const*(Time - r/(SpeedOfLight + x_velocity)));   // OUT   y5
-                     term2:=term2 + 0.5 * 0.5*Cos(theta_const*(-Time - r/(SpeedOfLight - x_velocity)));  // IN  y6
+                     term2:=term2 + (1 - reflected_amp) * 2.0 * 0.5*Cos(theta_const*(-Time - r/(SpeedOfLight + x_velocity)));  // OUT   y2
+                     //term2:=term2 + (1 - reflected_amp) * 2.0 * 0.5*Cos(theta_const*(Time - r/(SpeedOfLight + x_velocity)));   // OUT   y1
+                     //term2:=term2 - (1 - reflected_amp) * 2.0 * 0.5*Cos(theta_const*(Time - r/(SpeedOfLight + x_velocity)));   // OUT   y5
+                     term2:=term2 + (1 - reflected_amp) * 0.5 * 0.5*Cos(theta_const*(-Time - r/(SpeedOfLight - x_velocity)));  // IN  y6
 
                      // Y coordinate terms
-                     term3:=term3 - 0.5 * 0.5*Sin(theta_const*(Time - r/(SpeedOfLight - x_velocity)));   // IN  y7
-                     term3:=term3 - 0.5 * 0.5*Sin(theta_const*(-Time - r/(SpeedOfLight - x_velocity)));  // IN  y3
-                     term3:=term3 - 0.5 * 0.5*Sin(theta_const*(-Time - r/(SpeedOfLight - x_velocity)));  // IN  y8
-                     term3:=term3 + 2.0 * 0.5*Sin(theta_const*(Time - r/(SpeedOfLight + x_velocity)));   // OUT   y4
+                     term3:=term3 - (1 - reflected_amp) * 0.5 * 0.5*Sin(theta_const*(Time - r/(SpeedOfLight - x_velocity)));   // IN  y7
+                     term3:=term3 - (1 - reflected_amp) * 0.5 * 0.5*Sin(theta_const*(-Time - r/(SpeedOfLight - x_velocity)));  // IN  y3
+                     term3:=term3 - (1 - reflected_amp) * 0.5 * 0.5*Sin(theta_const*(-Time - r/(SpeedOfLight - x_velocity)));  // IN  y8
+                     term3:=term3 + (1 - reflected_amp) * 2.0 * 0.5*Sin(theta_const*(Time - r/(SpeedOfLight + x_velocity)));   // OUT   y4
                    end;
 
-                   if FrameCount > Trunc(GridHeight/2 + GridWidth/2 + 20) then begin
+                   if FrameCount > 120 then begin
                      CheckBox1.Checked:=false;
                      save_frames:=false;
                    end;
@@ -6362,21 +6342,6 @@ begin
        3: Ecase:=6;        {x at right boundary}
      end;
   Result:=Ecase;         {report finding}
-end;
-
-procedure TForm1.Edit3Change(Sender: TObject);
-var
-  tx_percent: smallint;
-begin
-  try
-    tx_percent:=StrToInt(Edit3.Text);
-  except                       {catch any invalid integer conditions}
-    on E: Exception do
-      Edit3.Text:='40';
-  end;
-  if (tx_percent < 0) or (tx_percent > 100) then begin
-    Edit3.Text:='40';
-  end;
 end;
 
 function TForm1.VectorInterpolate(v1, v2, v3, v4: Vector; Xfrac,

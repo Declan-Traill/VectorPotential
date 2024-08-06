@@ -6374,9 +6374,6 @@ begin
     on E: Exception do
       Edit3.Text:='40';
   end;
-  if (tx_percent < 0) or (tx_percent > 100) then begin
-    Edit3.Text:='40';
-  end;
 end;
 
 function TForm1.VectorInterpolate(v1, v2, v3, v4: Vector; Xfrac,
